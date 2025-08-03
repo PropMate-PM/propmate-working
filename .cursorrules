@@ -1,0 +1,52 @@
+# BUSINESS LOGIC
+[rules.business]
+1 = "The platform lists prop firms for Forex and futures trading, offering users the best available discount and a 50% cashback on the affiliate commission."
+2 = "If a firm offers 25% commission to us, we return 12.5% to the user as cashback."
+3 = "Cashback should only apply if the user uses our referral link and completes a purchase."
+
+# AFFILIATE TRACKING & PAYOUTS
+[rules.affiliate]
+1 = "Each prop firm has a unique referral link. Track clicks and purchases associated with each user."
+2 = "Store and display estimated cashback based on known commission rates. Mark as 'pending' until verified."
+3 = "Admin should have the ability to manually confirm, reject, or modify cashback payouts."
+
+# BACKEND STRUCTURE
+[rules.backend]
+1 = "Use a clean REST API structure or Next.js API routes to handle cashback calculation, user referral tracking, and firm data."
+2 = "Prop firm data (name, description, discount code, referral link, commission rate, etc.) should be editable via an admin panel or flat file (JSON/YAML/DB)."
+3 = "Use consistent naming: snake_case for backend APIs and camelCase for frontend logic."
+
+# FRONTEND BEHAVIOR
+[rules.frontend]
+1 = "Display each prop firm with its logo, brief description, max discount, and cashback rate."
+2 = "Ensure all links clearly state 'Referral Link' and open in new tab."
+3 = "Cashback amount should auto-update based on commission data if available."
+
+# SEO & MARKETING
+[rules.seo]
+1 = "Use dynamic metadata (title, description, OG tags) based on the prop firm name and discount info."
+2 = "Optimize FAQ and blog pages using structured data markup (schema.org)."
+3 = "Use readable, keyword-rich URLs (e.g., /firms/funderx-cashback)."
+
+# FAQ & RULES SECTION
+[rules.faq]
+1 = "Use a collapsible Q&A UI for FAQs."
+2 = "Include questions like 'How does cashback work?', 'When will I receive my cashback?', 'What if I didn’t use the referral link?'"
+3 = "Use informal but clear language; speak like you're talking directly to the trader."
+
+# GENERAL UI/UX
+[rules.uiux]
+1 = "Design should be clean, mobile-responsive, and optimized for conversions (easy CTAs, clear cashback details)."
+2 = "Use colors that match finance/professional themes (navy, green, gray)."
+3 = "Avoid over-cluttering the homepage. Focus on top firms and a clear CTA: 'Get Discount + Cashback'."
+
+# DEVELOPMENT CONVENTIONS
+[rules.dev]
+1 = "Use TypeScript on both frontend and backend."
+2 = "Use environment variables for all referral links and payout-related config."
+3 = "Separate logic for cashback calculations, UI rendering, and prop firm data management."
+
+[rules.design]
+1 = "Never alter the existing design aesthetics, layout structure, color scheme, or UI component styles unless explicitly requested."
+2 = "Preserve the look and feel of the current UI — do not modify Tailwind classes, layout spacing, font sizes, or colors without instruction."
+3 = "Assume the current design choices are intentional and final unless a change is clearly specified."
