@@ -1,5 +1,5 @@
-import React from 'react'
-import { ArrowDown, DollarSign, TrendingUp, Users, Vault } from 'lucide-react'
+
+import { ArrowDown, DollarSign, TrendingUp, Vault, Gift, Settings } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 
 export default function Hero() {
@@ -123,72 +123,108 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Enhanced Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
+        {/* New Features Section - Responsive */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-4xl mx-auto px-4">
+          {/* 50% Revenue Split Feature */}
           <div 
-            className="group p-6 sm:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 hover:border-opacity-60"
+            className="group transition-all duration-300 hover:scale-105 w-full max-w-xs mx-auto md:mx-0"
             style={{
-              backgroundColor: theme.cardBackground,
-              backdropFilter: theme.backdropFilter,
-              borderColor: theme.cardBorder,
-              boxShadow: theme.cardShadow
+              position: 'relative',
+              minHeight: '274px',
+              background: 'rgba(151, 86, 125, 0.05)',
+              border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(31.9617px)',
+              borderRadius: '38.3541px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px 32px',
+              gap: '20px'
             }}
           >
             <div 
-              className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300"
+              className="flex items-center justify-center w-16 h-16 rounded-2xl mt-4"
               style={{ 
                 background: `linear-gradient(135deg, ${theme.accent}20 0%, ${theme.cta}20 100%)`,
                 boxShadow: `0 4px 16px ${theme.accent}20`
               }}
             >
-              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: theme.accent }} />
+              <DollarSign className="h-8 w-8" style={{ color: theme.accent }} />
             </div>
-            <div className="text-3xl sm:text-4xl font-black mb-2 sm:mb-3" style={{ color: theme.textPrimary }}>Up to 50%</div>
-            <div className="typography-ui sm:typography-body font-semibold" style={{ color: theme.textSecondary }}>Cashback Rate</div>
+            <div className="text-lg md:text-xl font-bold mb-2 text-center" style={{ color: theme.textPrimary }}>50% Revenue Split</div>
+            <div className="text-xs md:text-sm font-light text-center" style={{ color: theme.textSecondary }}>
+              We share 50% of our affiliate revenue with you as cashback
+            </div>
           </div>
           
+          {/* Highest Discount Feature */}
           <div 
-            className="group p-6 sm:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 hover:border-opacity-60"
+            className="group transition-all duration-300 hover:scale-105 w-full max-w-xs mx-auto md:mx-0"
             style={{
-              backgroundColor: theme.cardBackground,
-              backdropFilter: theme.backdropFilter,
-              borderColor: theme.cardBorder,
-              boxShadow: theme.cardShadow
+              position: 'relative',
+              minHeight: '274px',
+              background: 'rgba(151, 86, 125, 0.05)',
+              border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(31.9617px)',
+              borderRadius: '38.3541px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px 32px',
+              gap: '20px'
             }}
           >
             <div 
-              className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300"
+              className="flex items-center justify-center w-16 h-16 rounded-2xl mt-4"
               style={{ 
                 background: `linear-gradient(135deg, ${theme.accent}20 0%, ${theme.cta}20 100%)`,
                 boxShadow: `0 4px 16px ${theme.accent}20`
               }}
             >
-              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: theme.accent }} />
+              <Settings className="h-8 w-8" style={{ color: theme.accent }} />
             </div>
-            <div className="text-3xl sm:text-4xl font-black mb-2 sm:mb-3" style={{ color: theme.textPrimary }}>$50K+</div>
-            <div className="typography-ui sm:typography-body font-semibold" style={{ color: theme.textSecondary }}>Paid Out</div>
+            <div className="text-lg md:text-xl font-bold mb-2 text-center" style={{ color: theme.textPrimary }}>Highest Discount</div>
+            <div className="text-xs md:text-sm font-light text-center" style={{ color: theme.textSecondary }}>
+              Avail the highest discount from the website and earn cashback on top of it
+            </div>
           </div>
           
+          {/* Exclusive Giveaways Feature */}
           <div 
-            className="group p-6 sm:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 hover:border-opacity-60 sm:col-span-1 col-span-1"
+            className="group transition-all duration-300 hover:scale-105 w-full max-w-xs mx-auto md:mx-0"
             style={{
-              backgroundColor: theme.cardBackground,
-              backdropFilter: theme.backdropFilter,
-              borderColor: theme.cardBorder,
-              boxShadow: theme.cardShadow
+              position: 'relative',
+              minHeight: '274px',
+              background: 'rgba(151, 86, 125, 0.05)',
+              border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(31.9617px)',
+              borderRadius: '38.3541px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px 32px',
+              gap: '20px'
             }}
           >
             <div 
-              className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300"
+              className="flex items-center justify-center w-16 h-16 rounded-2xl mt-4"
               style={{ 
                 background: `linear-gradient(135deg, ${theme.accent}20 0%, ${theme.cta}20 100%)`,
                 boxShadow: `0 4px 16px ${theme.accent}20`
               }}
             >
-              <Users className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: theme.accent }} />
+              <Gift className="h-8 w-8" style={{ color: theme.accent }} />
             </div>
-            <div className="text-3xl sm:text-4xl font-black mb-2 sm:mb-3" style={{ color: theme.textPrimary }}>1,000+</div>
-            <div className="typography-ui sm:typography-body font-semibold" style={{ color: theme.textSecondary }}>Happy Traders</div>
+            <div className="text-lg md:text-xl font-bold mb-2 text-center" style={{ color: theme.textPrimary }}>Exclusive Giveaways</div>
+            <div className="text-xs md:text-sm font-light text-center" style={{ color: theme.textSecondary }}>
+              Enter into exclusive account giveaways
+            </div>
           </div>
         </div>
 

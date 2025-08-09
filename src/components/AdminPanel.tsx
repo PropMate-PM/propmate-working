@@ -105,25 +105,25 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(20px)' }}
     >
       <div 
-        className="p-8 max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-2xl border"
+        className="p-4 sm:p-6 max-w-7xl w-full flex flex-col"
         style={{
-          backgroundColor: theme.cardBackground,
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderColor: theme.cardBorder,
-          boxShadow: `${theme.cardShadow}, 0 0 0 1px rgba(255, 255, 255, 0.05)`
+          background: 'rgba(151, 86, 125, 0.05)',
+          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(31.9617px)',
+          borderRadius: '38.3541px',
+          height: 'min(90vh, 800px)',
+          maxHeight: 'min(90vh, 800px)'
         }}
       >
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <h2 className="typography-h3" style={{ color: theme.textPrimary }}>My Dashboard</h2>
-          </div>
+        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-shrink-0">
+          <h2 className="typography-h4 sm:typography-h3" style={{ color: theme.textPrimary }}>My Dashboard</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-2xl transition-colors hover:bg-opacity-80"
-            style={{ backgroundColor: theme.cardBackground }}
+            style={{ background: 'rgba(151, 86, 125, 0.05)' }}
           >
-            <X className="h-6 w-6" style={{ color: theme.textSecondary }} />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: theme.textSecondary }} />
           </button>
         </div>
 
@@ -132,18 +132,19 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
             <p className="typography-ui font-semibold mb-4" style={{ color: theme.textSecondary }}>Please sign in to view your dashboard</p>
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-2xl typography-ui font-semibold transition-all duration-200 hover:brightness-110"
+              className="px-6 py-3 rounded-2xl typography-ui font-semibold transition-all duration-200 hover:scale-105 transform"
               style={{
-                backgroundColor: theme.cta,
+                background: `linear-gradient(135deg, ${theme.cta} 0%, ${theme.accent} 100%)`,
                 color: theme.ctaText,
-                boxShadow: `0 4px 16px ${theme.cta}40`
+                boxShadow: `0 12px 40px ${theme.cta}40, inset 0 1px 0 rgba(255, 255, 255, 0.2)`
               }}
             >
               Close
             </button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-8">
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto space-y-4 sm:space-y-6">
             {/* User Savings Tracker */}
             <UserSavingsTracker user={user} />
 
@@ -153,17 +154,18 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
               
               {/* Filter Tabs */}
               <div 
-                className="flex space-x-1 mb-8 p-1 rounded-2xl border"
+                className="flex space-x-1 mb-4 sm:mb-6 p-1 overflow-x-auto flex-shrink-0"
                 style={{
-                  backgroundColor: theme.cardBackground,
-                  borderColor: theme.cardBorder
+                  background: 'rgba(151, 86, 125, 0.05)',
+                  border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '38.3541px'
                 }}
               >
                 {(['all', 'pending', 'paid', 'rejected'] as const).map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilter(status)}
-                    className={`px-6 py-3 rounded-xl typography-ui font-semibold transition-all capitalize`}
+                    className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-xl typography-small sm:typography-ui font-semibold transition-all whitespace-nowrap capitalize`}
                     style={filter === status ? {
                       backgroundColor: `${theme.accent}20`,
                       color: theme.accent,
@@ -199,10 +201,13 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
                     {filteredSubmissions.map((submission) => (
                       <div
                         key={submission.id}
-                        className="p-6 rounded-2xl border transition-all duration-200"
+                        className="p-4 sm:p-6 rounded-2xl border transition-all duration-200 hover:scale-105"
                         style={{
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.cardBorder
+                          background: 'rgba(151, 86, 125, 0.05)',
+                          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+                          backdropFilter: 'blur(31.9617px)',
+                          borderRadius: '38.3541px'
                         }}
                       >
                         <div className="flex items-start justify-between mb-6">
@@ -211,7 +216,7 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
                               src={submission.prop_firms?.logo_url || ''}
                               alt="Prop firm logo"
                               className="w-12 h-12 rounded-2xl object-cover border"
-                              style={{ borderColor: theme.cardBorder }}
+                              style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                             />
                             <div>
                               <h4 className="typography-h4" style={{ color: theme.textPrimary }}>
@@ -256,8 +261,8 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
                             <p 
                               className="font-mono typography-small px-3 py-2 rounded-xl break-all border"
                               style={{
-                                backgroundColor: theme.cardBackground,
-                                borderColor: theme.cardBorder,
+                                background: 'rgba(151, 86, 125, 0.05)',
+                                border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                                 color: theme.textPrimary
                               }}
                             >
@@ -283,6 +288,7 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </div>
         )}

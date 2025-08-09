@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     question: "Is there a minimum purchase amount to qualify for cashback?",
-    answer: "No, there’s no minimum purchase requirement. You'll receive the stated cashback percentage for any qualifying purchase, regardless of the amount."
+    answer: "No, there's no minimum purchase requirement. You'll receive the stated cashback percentage for any qualifying purchase, regardless of the amount."
   },
   {
     question: "Is there a minimum payout threshold?",
@@ -44,55 +44,78 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="py-16 sm:py-24">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* FAQ Header */}
         <div 
-          className="text-center mb-12 sm:mb-16 p-6 sm:p-8 rounded-2xl border"
+          className="text-center mb-12 sm:mb-16 w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-6 md:p-8 gap-6"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            position: 'relative',
+            minHeight: '150px',
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px'
           }}
         >
-          <h2 className="typography-h3 sm:typography-h2 mb-4 sm:mb-6" style={{ color: theme.textPrimary }}>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: theme.textPrimary }}>
             Frequently Asked Questions
           </h2>
-          <p className="typography-body sm:typography-body-large" style={{ color: theme.textSecondary }}>
+          <p className="text-base md:text-lg" style={{ color: theme.textSecondary }}>
             Everything you need to know about our cashback program
           </p>
         </div>
 
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="rounded-2xl border overflow-hidden"
-              style={{
-                backgroundColor: theme.cardBackground,
-                backdropFilter: theme.backdropFilter,
-                borderColor: theme.cardBorder,
-                boxShadow: theme.cardShadow
-              }}
+                          className="w-full max-w-5xl mx-auto overflow-hidden"
+            style={{
+              position: 'relative',
+              background: 'rgba(151, 86, 125, 0.05)',
+              border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(31.9617px)',
+              borderRadius: '38.3541px'
+            }}
             >
+              {/* FAQ Question */}
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full px-4 sm:px-8 py-4 sm:py-6 text-left flex items-center justify-between transition-colors hover:bg-opacity-80"
-                style={{ 
-                  backgroundColor: openIndex === index ? `${theme.accent}05` : 'transparent'
+                className="w-full text-left flex items-center justify-between transition-colors hover:bg-opacity-80 p-4 md:p-8 gap-4 md:gap-6"
+                style={{
+                  position: 'relative',
+                  minHeight: '80px',
+                  background: openIndex === index ? 'rgba(151, 86, 125, 0.1)' : 'transparent'
                 }}
               >
-                <h4 className="typography-ui sm:typography-h4 pr-4 text-left" style={{ color: theme.textPrimary }}>
+                <h4 className="text-lg md:text-xl font-bold pr-4 text-left" style={{ color: theme.textPrimary }}>
                   {faq.question}
                 </h4>
                 {openIndex === index ? (
-                  <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" style={{ color: theme.accent }} />
+                  <ChevronUp className="h-5 w-5 flex-shrink-0" style={{ color: theme.accent }} />
                 ) : (
-                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" style={{ color: theme.accent }} />
+                  <ChevronDown className="h-5 w-5 flex-shrink-0" style={{ color: theme.accent }} />
                 )}
               </button>
+              
+              {/* FAQ Answer */}
               {openIndex === index && (
-                <div className="px-4 sm:px-8 pb-4 sm:pb-6">
-                  <p className="typography-small sm:typography-body leading-relaxed" style={{ color: theme.textSecondary }}>
+                <div 
+                  className="w-full p-4 md:p-8"
+                  style={{
+                    boxSizing: 'border-box',
+                    position: 'relative',
+                    minHeight: '120px',
+                    background: 'rgba(151, 86, 125, 0.05)',
+                    border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+                    backdropFilter: 'blur(31.9617px)',
+                    borderRadius: '38.3541px'
+                  }}
+                >
+                  <p className="text-sm md:text-base leading-relaxed" style={{ color: theme.textSecondary }}>
                     {faq.answer}
                   </p>
                 </div>
@@ -102,20 +125,28 @@ export default function FAQ() {
         </div>
 
         <div 
-          className="text-center mt-8 sm:mt-12 p-4 sm:p-6 rounded-2xl border"
+          className="text-center mt-8 sm:mt-12 w-full max-w-5xl mx-auto"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            position: 'relative',
+            minHeight: '121px',
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '31px 42px'
           }}
         >
-          <p className="typography-body mb-4 sm:mb-6" style={{ color: theme.textSecondary }}>Still have questions?</p>
+          <p className="text-base mb-4" style={{ color: theme.textSecondary }}>Still have questions?</p>
           <a 
             href="https://discord.gg/proptrading" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl typography-ui font-semibold transition-all duration-200 hover:brightness-110"
+            className="inline-flex items-center px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:brightness-110"
             style={{
               backgroundColor: theme.cta,
               color: theme.ctaText,

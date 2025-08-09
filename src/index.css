@@ -4,6 +4,17 @@
 
 /* Typography System */
 @layer base {
+  /* Remove any default backgrounds */
+  html, body {
+    background: none !important;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  * {
+    max-width: 100%;
+  }
+  
   /* Set Inter as the default font family */
   html {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -92,5 +103,33 @@
     .typography-h2 {
       font-size: 1.75rem; /* 28px on small mobile */
     }
+  }
+
+  /* Enhanced Button Animations */
+  button {
+    transition: all 0.2s ease-in-out;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active {
+    transform: translateY(0px);
+  }
+
+  /* Input and Select Placeholder Styling */
+  ::placeholder {
+    opacity: 0.7;
+  }
+  
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

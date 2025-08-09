@@ -195,7 +195,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
       // Refresh submissions
       await fetchSubmissions()
       
-      // If approved, create payout record
+      // If approved (marked as paid), create payout record
       if (status === 'paid') {
         const submission = submissions.find(s => s.id === submissionId)
         if (submission) {
@@ -317,7 +317,9 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
 
   const calculateTotals = () => {
     const totalRequests = submissions.length
-    const pendingRequests = submissions.filter(s => s.status === 'pending').length
+    // Number of unpaid payouts: any payout record not marked as completed in the Payouts section
+    const pendingRequests = payouts.filter(p => p.status !== 'completed').length
+    // For now, treat 'paid' submissions as approved since the database doesn't support 'approved' status
     const approvedRequests = submissions.filter(s => s.status === 'paid').length
     const totalCashbackOwed = submissions
       .filter(s => s.status === 'paid')
@@ -332,7 +334,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
       approvedRequests,
       totalCashbackOwed,
       totalCashbackPaid,
-      outstandingPayouts: totalCashbackOwed - totalCashbackPaid
+      outstandingPayouts: Math.max(0, totalCashbackOwed - totalCashbackPaid)
     }
   }
 
@@ -346,13 +348,13 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(20px)' }}
     >
       <div 
-        className="p-4 sm:p-6 max-w-7xl w-full flex flex-col rounded-2xl border"
+        className="p-4 sm:p-6 max-w-7xl w-full flex flex-col"
         style={{
-          backgroundColor: theme.cardBackground,
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderColor: theme.cardBorder,
-          boxShadow: `${theme.cardShadow}, 0 0 0 1px rgba(255, 255, 255, 0.05)`,
+          background: 'rgba(151, 86, 125, 0.05)',
+          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(31.9617px)',
+          borderRadius: '38.3541px',
           // Fixed dimensions to prevent size changes
           height: 'min(90vh, 800px)',
           maxHeight: 'min(90vh, 800px)'
@@ -363,7 +365,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
           <button
             onClick={onClose}
             className="p-2 rounded-2xl transition-colors hover:bg-opacity-80"
-            style={{ backgroundColor: theme.cardBackground }}
+            style={{ background: 'rgba(151, 86, 125, 0.05)' }}
           >
             <X className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: theme.textSecondary }} />
           </button>
@@ -371,10 +373,13 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
 
         {/* Tab Navigation */}
         <div 
-          className="flex space-x-1 mb-4 sm:mb-6 p-1 rounded-2xl border overflow-x-auto flex-shrink-0"
+          className="flex space-x-1 mb-4 sm:mb-6 p-1 overflow-x-auto flex-shrink-0 scrollbar-hide"
           style={{
-            backgroundColor: theme.cardBackground,
-            borderColor: theme.cardBorder
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '38.3541px',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
           }}
         >
           {[
@@ -432,12 +437,13 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                 {activeTab === 'overview' && (
                   <div className="space-y-4 sm:space-y-6 animate-fadeIn h-full">
                     {/* Key Metrics */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div 
                         className="p-3 sm:p-6 rounded-2xl border"
                         style={{
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.cardBorder
+                          background: 'rgba(151, 86, 125, 0.05)',
+                          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '38.3541px'
                         }}
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -450,8 +456,9 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                       <div 
                         className="p-3 sm:p-6 rounded-2xl border"
                         style={{
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.cardBorder
+                          background: 'rgba(151, 86, 125, 0.05)',
+                          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '38.3541px'
                         }}
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -464,8 +471,9 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                       <div 
                         className="p-3 sm:p-6 rounded-2xl border"
                         style={{
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.cardBorder
+                          background: 'rgba(151, 86, 125, 0.05)',
+                          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '38.3541px'
                         }}
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -478,8 +486,9 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                       <div 
                         className="p-3 sm:p-6 rounded-2xl border"
                         style={{
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.cardBorder
+                          background: 'rgba(151, 86, 125, 0.05)',
+                          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '38.3541px'
                         }}
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -494,14 +503,14 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     <div 
                       className="p-4 sm:p-6 rounded-2xl border flex-1 overflow-hidden"
                       style={{
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       <h3 className="typography-ui sm:typography-h4 mb-4" style={{ color: theme.textPrimary }}>Recent Submissions</h3>
                       <div className="space-y-4 overflow-y-auto max-h-96">
                         {submissions.slice(0, 5).map((submission) => (
-                          <div key={submission.id} className="p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+                          <div key={submission.id} className="p-4 rounded-xl border" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                             {/* Header with basic info */}
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center space-x-3">
@@ -555,7 +564,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                                 <p className="font-mono typography-small break-all p-2 rounded border" style={{ 
                                   color: theme.textPrimary,
                                   backgroundColor: `${theme.cardBackground}80`,
-                                  borderColor: theme.cardBorder
+                                  border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                                 }}>
                                   {submission.wallet_address}
                                 </p>
@@ -564,7 +573,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
 
                             {/* Action buttons for pending submissions */}
                             {submission.status === 'pending' && (
-                              <div className="flex space-x-3 pt-3 border-t" style={{ borderColor: theme.cardBorder }}>
+                              <div className="flex space-x-3 pt-3 border-t" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                                 <button
                                   onClick={() => updateSubmissionStatus(submission.id, 'paid')}
                                   className="flex-1 px-4 py-2 rounded-lg typography-small font-semibold transition-colors"
@@ -593,8 +602,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     <div 
                       className="p-4 sm:p-6 rounded-2xl border flex-1 overflow-hidden"
                       style={{
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       <h3 className="typography-ui sm:typography-h4 mb-4" style={{ color: theme.textPrimary }}>Registered Users ({users.length})</h3>
@@ -604,7 +613,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                           const userSaving = userSavings.find(s => s.user_id === user.id)
                           
                           return (
-                            <div key={user.id} className="flex flex-col lg:flex-row lg:items-center justify-between p-3 sm:p-4 rounded-xl border space-y-3 lg:space-y-0" style={{ borderColor: theme.cardBorder }}>
+                            <div key={user.id} className="flex flex-col lg:flex-row lg:items-center justify-between p-3 sm:p-4 rounded-xl border space-y-3 lg:space-y-0" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-3 mb-2">
                                   <div 
@@ -661,14 +670,14 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     <div 
                       className="p-4 sm:p-6 rounded-2xl border flex-1 overflow-hidden"
                       style={{
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       <h3 className="typography-ui sm:typography-h4 mb-4" style={{ color: theme.textPrimary }}>Payout Management</h3>
                       <div className="space-y-4 overflow-y-auto max-h-full">
                         {payouts.map((payout) => (
-                          <div key={payout.id} className="p-3 sm:p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+                          <div key={payout.id} className="p-3 sm:p-4 rounded-xl border" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 space-y-2 sm:space-y-0">
                               <div className="min-w-0 flex-1">
                                 <p className="typography-small sm:typography-ui font-semibold break-all" style={{ color: theme.textPrimary }}>{payout.user_email}</p>
@@ -694,7 +703,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                                 <p className="font-mono typography-small break-all p-2 rounded border" style={{ 
                                   color: theme.textPrimary,
                                   backgroundColor: `${theme.cardBackground}80`,
-                                  borderColor: theme.cardBorder
+                                  border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                                 }}>
                                   {payout.crypto_wallet_address}
                                 </p>
@@ -705,7 +714,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                                   <p className="font-mono typography-small break-all p-2 rounded border" style={{ 
                                     color: theme.textPrimary,
                                     backgroundColor: `${theme.cardBackground}80`,
-                                    borderColor: theme.cardBorder
+                                    border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                                   }}>
                                     {payout.transaction_hash}
                                   </p>
@@ -720,8 +729,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                                   placeholder="Transaction hash"
                                   className="flex-1 px-3 py-2 rounded-lg border typography-small"
                                   style={{
-                                    backgroundColor: theme.cardBackground,
-                                    borderColor: theme.cardBorder,
+                                    background: 'rgba(151, 86, 125, 0.05)',
+                                    border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                                     color: theme.textPrimary
                                   }}
                                   onKeyPress={(e) => {
@@ -762,25 +771,25 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     <div 
                       className="p-4 sm:p-6 rounded-2xl border flex-1 overflow-hidden"
                       style={{
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       <h3 className="typography-ui sm:typography-h4 mb-6" style={{ color: theme.textPrimary }}>Revenue Analytics</h3>
                       
                       {/* Summary Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ borderColor: theme.cardBorder }}>
+                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                           <p className="typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Total Users</p>
                           <p className="text-xl sm:text-2xl font-bold" style={{ color: theme.textPrimary }}>{users.length}</p>
                         </div>
-                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ borderColor: theme.cardBorder }}>
+                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                           <p className="typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Conversion Rate</p>
                           <p className="text-xl sm:text-2xl font-bold" style={{ color: theme.accent }}>
                             {totals.totalRequests > 0 ? ((totals.approvedRequests / totals.totalRequests) * 100).toFixed(1) : 0}%
                           </p>
                         </div>
-                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ borderColor: theme.cardBorder }}>
+                        <div className="p-3 sm:p-4 rounded-xl border text-center" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                           <p className="typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Avg Cashback</p>
                           <p className="text-xl sm:text-2xl font-bold" style={{ color: theme.textPrimary }}>
                             ${totals.approvedRequests > 0 ? (totals.totalCashbackOwed / totals.approvedRequests).toFixed(2) : '0.00'}
@@ -793,7 +802,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                         <h4 className="typography-small sm:typography-ui font-semibold mb-4" style={{ color: theme.textPrimary }}>Top Users by Total Savings</h4>
                         <div className="space-y-3">
                           {userSavings.slice(0, 10).map((saving, index) => (
-                            <div key={saving.user_id} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: theme.cardBorder }}>
+                            <div key={saving.user_id} className="flex items-center justify-between p-3 rounded-lg border" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                               <div className="flex items-center space-x-3 min-w-0 flex-1">
                                 <div 
                                   className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center typography-small font-bold flex-shrink-0"
@@ -828,8 +837,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     <div 
                       className="p-4 sm:p-6 rounded-2xl border flex-1 overflow-hidden"
                       style={{
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       <h3 className="typography-ui sm:typography-h4 mb-4" style={{ color: theme.textPrimary }}>User Communications</h3>
@@ -879,8 +888,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                             <button
                               className="w-full p-3 rounded-xl border text-left transition-colors hover:bg-opacity-80"
                               style={{
-                                backgroundColor: theme.cardBackground,
-                                borderColor: theme.cardBorder,
+                                background: 'rgba(151, 86, 125, 0.05)',
+                                border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                                 color: theme.textPrimary
                               }}
                             >
@@ -898,7 +907,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                         <div>
                           <h4 className="typography-small sm:typography-ui font-semibold mb-3" style={{ color: theme.textPrimary }}>Recent Communications</h4>
                           <div className="space-y-3">
-                            <div className="p-3 rounded-lg border" style={{ borderColor: theme.cardBorder }}>
+                            <div className="p-3 rounded-lg border" style={{ border: '1.59809px solid rgba(255, 255, 255, 0.1)' }}>
                               <p className="typography-small" style={{ color: theme.textSecondary }}>No communications sent yet</p>
                             </div>
                           </div>
@@ -921,10 +930,10 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
             <div 
               className="p-4 sm:p-6 max-w-md w-full rounded-2xl border"
               style={{
-                backgroundColor: theme.cardBackground,
+                background: 'rgba(151, 86, 125, 0.05)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                borderColor: theme.cardBorder,
+                border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                 boxShadow: `${theme.cardShadow}, 0 0 0 1px rgba(255, 255, 255, 0.05)`
               }}
             >
@@ -933,7 +942,7 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                 <button
                   onClick={() => setSelectedUser(null)}
                   className="p-2 rounded-lg transition-colors hover:bg-opacity-80"
-                  style={{ backgroundColor: theme.cardBackground }}
+                  style={{ background: 'rgba(151, 86, 125, 0.05)' }}
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: theme.textSecondary }} />
                 </button>
@@ -952,8 +961,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     onChange={(e) => setEmailSubject(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border typography-small sm:typography-body"
                     style={{
-                      backgroundColor: theme.cardBackground,
-                      borderColor: theme.cardBorder,
+                      background: 'rgba(151, 86, 125, 0.05)',
+                      border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                       color: theme.textPrimary
                     }}
                     placeholder="Email subject"
@@ -968,8 +977,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     rows={4}
                     className="w-full px-3 py-2 rounded-lg border typography-small sm:typography-body resize-none"
                     style={{
-                      backgroundColor: theme.cardBackground,
-                      borderColor: theme.cardBorder,
+                      background: 'rgba(151, 86, 125, 0.05)',
+                      border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                       color: theme.textPrimary
                     }}
                     placeholder="Email message"
@@ -981,8 +990,8 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
                     onClick={() => setSelectedUser(null)}
                     className="flex-1 px-4 py-2 rounded-lg typography-small sm:typography-ui font-semibold border transition-colors"
                     style={{
-                      backgroundColor: theme.cardBackground,
-                      borderColor: theme.cardBorder,
+                      background: 'rgba(151, 86, 125, 0.05)',
+                      border: '1.59809px solid rgba(255, 255, 255, 0.1)',
                       color: theme.textSecondary
                     }}
                   >

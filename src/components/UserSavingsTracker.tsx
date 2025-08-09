@@ -11,12 +11,13 @@ interface SavingsData {
   totalDiscountSaved: number
   totalCashbackEarned: number
   totalCashbackPaid: number
+  totalPendingCashback: number
   totalSavings: number
   totalRequests: number
   approvedRequests: number
   pendingRequests: number
   rejectedRequests: number
-  savingsByFirm: { [key: string]: { discount: number; cashback: number; requests: number; firmName: string } }
+  savingsByFirm: { [key: string]: { discount: number; cashback: number; pendingCashback: number; requests: number; firmName: string } }
 }
 
 interface Achievement {
@@ -35,6 +36,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
     totalDiscountSaved: 0,
     totalCashbackEarned: 0,
     totalCashbackPaid: 0,
+    totalPendingCashback: 0,
     totalSavings: 0,
     totalRequests: 0,
     approvedRequests: 0,
@@ -94,6 +96,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       totalDiscountSaved: 0,
       totalCashbackEarned: 0,
       totalCashbackPaid: 0,
+      totalPendingCashback: 0,
       totalSavings: 0,
       totalRequests: submissions.length,
       approvedRequests: 0,
@@ -114,6 +117,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
         data.approvedRequests++
       } else if (submission.status === 'pending') {
         data.pendingRequests++
+        data.totalPendingCashback += cashbackAmount
       } else if (submission.status === 'rejected') {
         data.rejectedRequests++
       }
@@ -126,6 +130,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
         data.savingsByFirm[firmId] = {
           discount: 0,
           cashback: 0,
+          pendingCashback: 0,
           requests: 0,
           firmName
         }
@@ -136,11 +141,13 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       
       if (submission.status === 'paid') {
         data.savingsByFirm[firmId].cashback += cashbackAmount
+      } else if (submission.status === 'pending') {
+        data.savingsByFirm[firmId].pendingCashback += cashbackAmount
       }
     })
 
     // Calculate total savings
-    data.totalSavings = data.totalDiscountSaved + data.totalCashbackEarned
+    data.totalSavings = data.totalCashbackEarned + data.totalPendingCashback
 
     return data
   }
@@ -159,7 +166,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       {
         id: 'saver_100',
         title: 'Smart Saver',
-        description: 'Save $100 in total discounts and cashback',
+        description: 'Earn $100 in total cashback (approved + pending)',
         icon: <DollarSign className="h-5 w-5" />,
         threshold: 100,
         achieved: data.totalSavings >= 100,
@@ -168,7 +175,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       {
         id: 'saver_500',
         title: 'Super Saver',
-        description: 'Save $500 in total discounts and cashback',
+        description: 'Earn $500 in total cashback (approved + pending)',
         icon: <TrendingUp className="h-5 w-5" />,
         threshold: 500,
         achieved: data.totalSavings >= 500,
@@ -216,6 +223,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
           total_discount_saved: data.totalDiscountSaved,
           total_cashback_earned: data.totalCashbackEarned,
           total_cashback_paid: data.totalCashbackPaid,
+          total_pending_cashback: data.totalPendingCashback,
           total_requests: data.totalRequests,
           approved_requests: data.approvedRequests,
           last_updated: new Date().toISOString()
@@ -243,10 +251,11 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       <div 
         className="p-6 rounded-2xl border"
         style={{
-          backgroundColor: theme.cardBackground,
-          backdropFilter: theme.backdropFilter,
-          borderColor: theme.cardBorder,
-          boxShadow: theme.cardShadow
+          background: 'rgba(151, 86, 125, 0.05)',
+          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(31.9617px)',
+          borderRadius: '38.3541px'
         }}
       >
         <div className="text-center mb-6">
@@ -255,21 +264,21 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
             ${savingsData.totalSavings.toFixed(2)}
           </div>
           <p className="typography-body" style={{ color: theme.textSecondary }}>
-            Combined discounts and cashback earned
+            Combined approved and pending cashback
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
-            <div className="text-xl font-bold mb-1" style={{ color: theme.textPrimary }}>
-              ${savingsData.totalDiscountSaved.toFixed(2)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="text-center p-4 rounded-xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', borderRadius: '38.3541px' }}>
+            <div className="text-xl font-bold mb-1" style={{ color: theme.accent }}>
+              ${savingsData.totalPendingCashback.toFixed(2)}
             </div>
             <div className="typography-small font-semibold" style={{ color: theme.textSecondary }}>
-              Discount Saved
+              Pending Cashback
             </div>
           </div>
 
-          <div className="text-center p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+          <div className="text-center p-4 rounded-xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', borderRadius: '38.3541px' }}>
             <div className="text-xl font-bold mb-1" style={{ color: theme.accent }}>
               ${savingsData.totalCashbackEarned.toFixed(2)}
             </div>
@@ -278,7 +287,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
             </div>
           </div>
 
-          <div className="text-center p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+          <div className="text-center p-4 rounded-xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', borderRadius: '38.3541px' }}>
             <div className="text-xl font-bold mb-1" style={{ color: theme.textPrimary }}>
               {savingsData.totalRequests}
             </div>
@@ -287,7 +296,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
             </div>
           </div>
 
-          <div className="text-center p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+          <div className="text-center p-4 rounded-xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', borderRadius: '38.3541px' }}>
             <div className="text-xl font-bold mb-1" style={{ color: theme.textPrimary }}>
               {savingsData.approvedRequests}
             </div>
@@ -302,10 +311,11 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       <div 
         className="p-6 rounded-2xl border"
         style={{
-          backgroundColor: theme.cardBackground,
-          backdropFilter: theme.backdropFilter,
-          borderColor: theme.cardBorder,
-          boxShadow: theme.cardShadow
+          background: 'rgba(151, 86, 125, 0.05)',
+          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(31.9617px)',
+          borderRadius: '38.3541px'
         }}
       >
         <h4 className="typography-h4 mb-4" style={{ color: theme.textPrimary }}>Achievements</h4>
@@ -317,12 +327,13 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
                 achievement.achieved ? 'hover:scale-105' : ''
               }`}
               style={{
-                backgroundColor: achievement.achieved 
+                background: achievement.achieved 
                   ? `${theme.accent}10` 
-                  : theme.cardBackground,
-                borderColor: achievement.achieved 
-                  ? `${theme.accent}30` 
-                  : theme.cardBorder,
+                  : 'rgba(151, 86, 125, 0.05)',
+                border: achievement.achieved 
+                  ? `1.59809px solid ${theme.accent}30` 
+                  : '1.59809px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '38.3541px',
                 opacity: achievement.achieved ? 1 : 0.7
               }}
             >
@@ -387,18 +398,19 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
         <div 
           className="p-6 rounded-2xl border"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px'
           }}
         >
-          <h4 className="typography-h4 mb-4" style={{ color: theme.textPrimary }}>Savings by Prop Firm</h4>
+          <h4 className="typography-h4 mb-4" style={{ color: theme.textPrimary }}>Cashback by Prop Firm</h4>
           <div className="space-y-3">
             {Object.entries(savingsData.savingsByFirm)
-              .sort(([,a], [,b]) => (b.discount + b.cashback) - (a.discount + a.cashback))
+              .sort(([,a], [,b]) => (b.cashback + b.pendingCashback) - (a.cashback + a.pendingCashback))
               .map(([firmId, firmData]) => (
-                <div key={firmId} className="flex items-center justify-between p-4 rounded-xl border" style={{ borderColor: theme.cardBorder }}>
+                <div key={firmId} className="flex items-center justify-between p-4 rounded-xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', borderRadius: '38.3541px' }}>
                   <div>
                     <p className="typography-ui font-semibold mb-1" style={{ color: theme.textPrimary }}>
                       {firmData.firmName}
@@ -409,11 +421,11 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
                   </div>
                   <div className="text-right">
                     <p className="typography-ui font-bold mb-1" style={{ color: theme.accent }}>
-                      ${(firmData.discount + firmData.cashback).toFixed(2)}
+                      ${(firmData.cashback + firmData.pendingCashback).toFixed(2)}
                     </p>
                     <div className="flex space-x-4 typography-small" style={{ color: theme.textSecondary }}>
-                      <span>Discount: ${firmData.discount.toFixed(2)}</span>
-                      <span>Cashback: ${firmData.cashback.toFixed(2)}</span>
+                      <span>Approved: ${firmData.cashback.toFixed(2)}</span>
+                      <span>Pending: ${firmData.pendingCashback.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -427,10 +439,11 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
         <div 
           className="text-center py-12 p-6 rounded-2xl border"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px'
           }}
         >
           <div 

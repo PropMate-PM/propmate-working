@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ExternalLink, Gift, Star, TrendingUp, BarChart3, AlertTriangle } from 'lucide-react'
+import { ExternalLink, Gift, Star, TrendingUp, BarChart3, AlertTriangle, Search, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import type { PropFirm } from '../lib/supabase'
 
@@ -8,14 +8,78 @@ interface PropFirmsProps {
   onClaimCashback: (propFirm: PropFirm) => void
 }
 
+type SortState = 'default' | 'highest' | 'lowest'
+
 export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps) {
   const { theme } = useTheme()
   const [showFirstTimeOnly, setShowFirstTimeOnly] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortState, setSortState] = useState<SortState>('default')
 
-  // Filter firms based on first-time customer toggle
-  const filteredFirms = showFirstTimeOnly 
-    ? propFirms.filter(firm => firm.is_first_time_offer)
-    : propFirms.filter(firm => !firm.is_first_time_offer)
+  // Handle sort toggle cycling
+  const handleSortToggle = () => {
+    setSortState(prev => {
+      switch (prev) {
+        case 'default':
+          return 'highest'
+        case 'highest':
+          return 'lowest'
+        case 'lowest':
+          return 'default'
+        default:
+          return 'default'
+      }
+    })
+  }
+
+  // Get sort display info
+  const getSortDisplay = () => {
+    switch (sortState) {
+      case 'highest':
+        return {
+          icon: <ArrowDown className="h-4 w-4" style={{ color: theme.accent }} />,
+          text: 'High to Low',
+          description: 'Sorted by highest cashback first'
+        }
+      case 'lowest':
+        return {
+          icon: <ArrowUp className="h-4 w-4" style={{ color: theme.accent }} />,
+          text: 'Low to High', 
+          description: 'Sorted by lowest cashback first'
+        }
+      case 'default':
+      default:
+        return {
+          icon: <RotateCcw className="h-4 w-4" style={{ color: theme.textSecondary }} />,
+          text: 'Sort by Cashback',
+          description: 'No sorting applied'
+        }
+    }
+  }
+
+  // Apply all filters: first-time toggle, search, and sorting
+  const filteredFirms = React.useMemo(() => {
+    let filtered = showFirstTimeOnly 
+      ? propFirms.filter(firm => firm.is_first_time_offer)
+      : propFirms.filter(firm => !firm.is_first_time_offer)
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(firm => 
+        firm.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      )
+    }
+
+    // Apply sorting
+    if (sortState === 'highest') {
+      filtered = [...filtered].sort((a, b) => b.cashback_percentage - a.cashback_percentage)
+    } else if (sortState === 'lowest') {
+      filtered = [...filtered].sort((a, b) => a.cashback_percentage - b.cashback_percentage)
+    }
+    // Default state keeps original order (no sorting)
+
+    return filtered
+  }, [propFirms, showFirstTimeOnly, searchQuery, sortState])
 
   // Categorize filtered firms
   const forexFirms = filteredFirms.filter(firm => firm.category === 'forex')
@@ -34,69 +98,67 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
   const renderFirmCard = (firm: PropFirm) => (
     <div
       key={firm.id}
-      className="p-6 sm:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 group relative"
+      className="group relative transition-all duration-300 hover:scale-105 w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-5 md:gap-9 p-5 md:p-8"
       style={{
-        backgroundColor: theme.cardBackground,
-        backdropFilter: theme.backdropFilter,
-        borderColor: theme.cardBorder,
-        boxShadow: theme.cardShadow
+        position: 'relative',
+        minHeight: '200px',
+        background: 'rgba(151, 86, 125, 0.05)',
+        border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+        backdropFilter: 'blur(31.9617px)',
+        borderRadius: '38.3541px'
       }}
     >
-      <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6 mb-6 sm:mb-8">
-        <div className="relative flex-shrink-0">
-          <img
-            src={firm.logo_url}
-            alt={`${firm.name} logo`}
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover border"
-            style={{ borderColor: theme.cardBorder }}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="typography-h4 mb-2 sm:mb-3" style={{ color: theme.textPrimary }}>{firm.name}</h4>
-          <p className="typography-small sm:typography-body leading-relaxed" style={{ color: theme.textSecondary }}>
-            Get the highest discount from the website + cashback by purchasing from us.
-          </p>
+      <div className="flex-shrink-0">
+        <img
+          src={firm.logo_url}
+          alt={`${firm.name} logo`}
+          className="w-16 h-16 rounded-2xl object-cover border"
+          style={{ borderColor: theme.cardBorder }}
+        />
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <h4 className="text-xl font-bold mb-2" style={{ color: theme.textPrimary }}>{firm.name}</h4>
+        <p className="text-sm leading-relaxed mb-4" style={{ color: theme.textSecondary }}>
+          Get the highest discount from the website + cashback by purchasing from us.
+        </p>
+        
+        {/* Cashback Badge */}
+        <div 
+          className="inline-block px-3 py-1 rounded-full text-sm font-bold mb-4"
+          style={{ 
+            backgroundColor: '#ef4444',
+            color: 'white'
+          }}
+        >
+          {firm.cashback_percentage}% Cashback
         </div>
       </div>
 
-      <div 
-        className="text-center mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl border"
-        style={{
-          backgroundColor: `${theme.cardBackground}80`,
-          backdropFilter: 'blur(10px)',
-          borderColor: theme.cardBorder
-        }}
-      >
-        <div className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: theme.accent }}>
-          {firm.cashback_percentage}%
-        </div>
-        <div className="typography-small font-semibold" style={{ color: theme.textSecondary }}>Cashback</div>
-      </div>
-
-      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:gap-4">
+      <div className="flex flex-col md:flex-col space-y-3 w-full md:w-auto">
         <button
           onClick={() => handleAffiliateClick(firm.affiliate_link, firm.name)}
-          className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl typography-ui font-semibold text-center transition-all duration-200 flex items-center justify-center group-hover:scale-105 hover:brightness-110"
+          className="px-6 py-3 rounded-2xl font-semibold text-center transition-all duration-200 flex items-center justify-center group-hover:scale-105 hover:brightness-110"
           style={{
             backgroundColor: theme.cta,
             color: theme.ctaText,
             boxShadow: `0 4px 16px ${theme.cta}40`
           }}
         >
-          <span>Get Cashback</span>
-          <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 ml-2" />
+          <span>Purchase</span>
+          <ExternalLink className="h-4 w-4 ml-2" />
         </button>
         <button
           onClick={() => onClaimCashback(firm)}
-          className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl typography-ui font-semibold border transition-all duration-200 flex items-center justify-center group-hover:scale-105 hover:bg-opacity-80"
+          className="px-6 py-3 rounded-2xl font-semibold border transition-all duration-200 flex items-center justify-center group-hover:scale-105 hover:bg-opacity-80"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
+            backgroundColor: 'transparent',
             borderColor: theme.cardBorder,
             color: theme.textSecondary
           }}
         >
-          <Gift className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+          <Gift className="h-4 w-4 mr-2" />
           <span>Claim Cashback</span>
         </button>
       </div>
@@ -109,28 +171,31 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
     return (
       <div className="mb-12 sm:mb-16">
         <div 
-          className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8 sm:mb-12 p-4 sm:p-6 rounded-2xl border"
+          className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8 sm:mb-12 w-full max-w-5xl mx-auto p-6 md:p-8"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            position: 'relative',
+            minHeight: '121px',
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px'
           }}
         >
           <div 
-            className="p-2.5 sm:p-3 rounded-2xl"
+            className="p-3 rounded-2xl"
             style={{ backgroundColor: `${theme.accent}20` }}
           >
             {React.cloneElement(icon as React.ReactElement, { 
-              className: "h-5 w-5 sm:h-6 sm:w-6", 
+              className: "h-6 w-6", 
               style: { color: theme.accent } 
             })}
           </div>
-          <h3 className="typography-h4 sm:typography-h3 text-center sm:text-left" style={{ color: theme.textPrimary }}>
+          <h3 className="text-2xl font-bold" style={{ color: theme.textPrimary }}>
             {title}
           </h3>
           <div 
-            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full typography-small font-semibold"
+            className="px-4 py-2 rounded-full text-sm font-semibold"
             style={{
               backgroundColor: `${theme.accent}20`,
               color: theme.accent
@@ -140,7 +205,7 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="space-y-6">
           {firms.map(renderFirmCard)}
         </div>
       </div>
@@ -150,70 +215,180 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
   return (
     <section id="firms" className="py-16 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Featured Prop Firms Section */}
         <div 
-          className="text-center mb-16 sm:mb-20 p-6 sm:p-8 rounded-2xl border"
+          className="text-center mb-16 sm:mb-20 w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-6 md:p-8 gap-6"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            position: 'relative',
+            minHeight: '250px',
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px'
           }}
         >
-          <h2 className="typography-h3 sm:typography-h2 mb-4 sm:mb-6" style={{ color: theme.textPrimary }}>
+          <h2 className="text-3xl font-bold mb-4" style={{ color: theme.textPrimary }}>
             Featured Prop Firms
           </h2>
-          <p className="typography-body sm:typography-body-large max-w-2xl mx-auto mb-6 sm:mb-8" style={{ color: theme.textSecondary }}>
-            Choose from our carefully selected prop firms and start earning cashback.
+          <p className="text-lg max-w-2xl mx-auto mb-6" style={{ color: theme.textSecondary }}>
+            Choose from your favorite Prop Firms and start earning cashbacks.
           </p>
 
-          {/* First-Time Customer Filter Toggle */}
-          <div 
-            className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 rounded-2xl border max-w-md mx-auto"
-            style={{
-              backgroundColor: `${theme.cardBackground}80`,
-              backdropFilter: 'blur(10px)',
-              borderColor: theme.cardBorder
-            }}
-          >
-            <span className="typography-small font-semibold text-center sm:text-left" style={{ color: theme.textSecondary }}>
-              First Time Only
+          {/* Custom Toggle Button */}
+          <div className="relative flex items-center justify-center">
+            <span className="text-sm font-semibold mr-4" style={{ color: theme.textSecondary }}>
+              Toggle this on to see first purchase offers
             </span>
             <button
               onClick={() => setShowFirstTimeOnly(!showFirstTimeOnly)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2`}
+              className="relative transition-all duration-300 hover:scale-105"
               style={{
-                backgroundColor: showFirstTimeOnly ? theme.accent : `${theme.textSecondary}40`,
-                focusRingColor: theme.accent
+                position: 'relative',
+                width: '92px',
+                height: '39px',
+                background: showFirstTimeOnly 
+                  ? 'linear-gradient(135deg, #8B5A9F 0%, #97567D 100%)'
+                  : 'rgba(151, 86, 125, 0.2)',
+                border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+                backdropFilter: 'blur(31.9617px)',
+                borderRadius: '19.5px',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '3px'
               }}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  showFirstTimeOnly ? 'translate-x-6' : 'translate-x-1'
-                }`}
+              {/* Background Text */}
+              <span 
+                className="absolute font-bold transition-all duration-300"
+                style={{ 
+                  left: showFirstTimeOnly ? '6px' : 'auto',
+                  right: showFirstTimeOnly ? 'auto' : '8px',
+                  color: showFirstTimeOnly ? 'white' : theme.textSecondary,
+                  opacity: showFirstTimeOnly ? 1 : 0.8,
+                  zIndex: 1,
+                  fontSize: '9px',
+                  lineHeight: '1'
+                }}
+              >
+                {showFirstTimeOnly ? 'First Time' : 'Recurring'}
+              </span>
+              
+              {/* Sliding Circle */}
+              <div
+                className="absolute w-7 h-7 rounded-full transition-all duration-300 ease-in-out"
                 style={{
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+                  transform: showFirstTimeOnly ? 'translateX(58px)' : 'translateX(2px)',
+                  backdropFilter: 'blur(10px)',
+                  top: '4px',
+                  zIndex: 2
                 }}
               />
             </button>
-            <div className="flex items-center space-x-2">
-              <Star className="h-4 w-4" style={{ color: theme.accent }} />
-              <span className="typography-small font-semibold" style={{ color: theme.textSecondary }}>
-                {showFirstTimeOnly ? 'ON' : 'OFF'}
-              </span>
+          </div>
+
+          {/* Search and Filter Controls */}
+          <div className="w-full max-w-2xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-center">
+            {/* Search Box */}
+            <div className="relative w-full sm:w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5" style={{ color: theme.textSecondary }} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search prop firms..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-2xl border transition-all duration-200 focus:outline-none hover:brightness-110"
+                style={{
+                  background: 'rgba(151, 86, 125, 0.05)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  color: theme.textPrimary,
+                  boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(151, 86, 125, 0.1)',
+                  backdropFilter: 'blur(31.9617px)',
+                  WebkitBackdropFilter: 'blur(31.9617px)' // Safari support
+                }}
+                onFocus={(e) => {
+                  e.target.style.boxShadow = `inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 0 0 2px ${theme.accent}40, 0 8px 24px rgba(151, 86, 125, 0.2)`
+                  e.target.style.background = 'rgba(151, 86, 125, 0.08)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.boxShadow = 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(151, 86, 125, 0.1)'
+                  e.target.style.background = 'rgba(151, 86, 125, 0.05)'
+                }}
+              />
+            </div>
+
+            {/* Sort Toggle Button */}
+            <div className="relative">
+              <button
+                onClick={handleSortToggle}
+                className="group w-full sm:w-48 px-4 py-3 rounded-2xl border transition-all duration-200 focus:outline-none cursor-pointer hover:brightness-110 hover:scale-105"
+                style={{
+                  background: 'rgba(151, 86, 125, 0.05)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  color: theme.textPrimary,
+                  boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(151, 86, 125, 0.1)',
+                  backdropFilter: 'blur(31.9617px)',
+                  WebkitBackdropFilter: 'blur(31.9617px)' // Safari support
+                }}
+                onFocus={(e) => {
+                  e.target.style.boxShadow = `inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 0 0 2px ${theme.accent}40, 0 8px 24px rgba(151, 86, 125, 0.2)`
+                  e.target.style.background = 'rgba(151, 86, 125, 0.08)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.boxShadow = 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(151, 86, 125, 0.1)'
+                  e.target.style.background = 'rgba(151, 86, 125, 0.05)'
+                }}
+                title={getSortDisplay().description}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="font-medium text-sm">
+                    {getSortDisplay().text}
+                  </span>
+                  <div className="transition-transform duration-200 group-hover:scale-110">
+                    {getSortDisplay().icon}
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
-          <div 
-            className="mt-4 p-3 rounded-2xl border"
-            style={{
-              backgroundColor: `${theme.accent}10`,
-              borderColor: `${theme.accent}30`
-            }}
-          >
-            <p className="typography-small font-semibold" style={{ color: theme.accent }}>
-              Enable this option if you are making your first purchase with a prop firm.
-            </p>
-          </div>
+          {/* Sort Status Indicator */}
+          {sortState !== 'default' && (
+            <div 
+              className="text-center px-4 py-2 rounded-full text-xs font-semibold"
+              style={{
+                backgroundColor: `${theme.accent}15`,
+                color: theme.accent,
+                border: `1px solid ${theme.accent}30`
+              }}
+            >
+              <span className="flex items-center justify-center space-x-1">
+                {getSortDisplay().icon}
+                <span>Cashback: {getSortDisplay().text}</span>
+              </span>
+            </div>
+          )}
+
+          {showFirstTimeOnly && (
+            <div 
+              className="p-3 rounded-2xl"
+              style={{
+                backgroundColor: `${theme.accent}10`,
+                borderColor: `${theme.accent}30`
+              }}
+            >
+              <p className="text-sm font-semibold" style={{ color: theme.accent }}>
+                ✨ Showing first-time customer offers
+              </p>
+            </div>
+          )}
+
+
         </div>
 
         {/* Futures Prop Firms Section */}
@@ -225,64 +400,107 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
         {/* No results message */}
         {filteredFirms.length === 0 && (
           <div 
-            className="text-center py-12 sm:py-16 p-6 sm:p-8 rounded-2xl border"
+            className="text-center py-12 sm:py-16 w-full max-w-5xl mx-auto"
             style={{
-              backgroundColor: theme.cardBackground,
-              backdropFilter: theme.backdropFilter,
-              borderColor: theme.cardBorder,
-              boxShadow: theme.cardShadow
+              position: 'relative',
+              minHeight: '322px',
+              background: 'rgba(151, 86, 125, 0.05)',
+              border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(31.9617px)',
+              borderRadius: '38.3541px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '31px 42px'
             }}
           >
             <div 
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
               style={{ backgroundColor: `${theme.accent}20` }}
             >
-              <Star className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: theme.accent }} />
+              {searchQuery.trim() ? (
+                <Search className="h-8 w-8" style={{ color: theme.accent }} />
+              ) : (
+                <Star className="h-8 w-8" style={{ color: theme.accent }} />
+              )}
             </div>
-            <h3 className="typography-h4 mb-3 sm:mb-4" style={{ color: theme.textPrimary }}>
-              {showFirstTimeOnly ? 'No First-Time Offers Available' : 'No Recurring Offers Available'}
+            <h3 className="text-2xl font-bold mb-4" style={{ color: theme.textPrimary }}>
+              {searchQuery.trim() 
+                ? 'No Firms Found' 
+                : (showFirstTimeOnly ? 'No First-Time Offers Available' : 'No Recurring Offers Available')
+              }
             </h3>
-            <p className="typography-body mb-4 sm:mb-6 px-4" style={{ color: theme.textSecondary }}>
-              {showFirstTimeOnly 
-                ? 'There are currently no prop firms offering first-time customer cashback. Toggle off to see recurring offers.'
-                : 'There are currently no prop firms offering recurring customer cashback. Toggle on to see first-time offers.'
+            <p className="text-base mb-6 px-4" style={{ color: theme.textSecondary }}>
+              {searchQuery.trim() 
+                ? `No prop firms found matching "${searchQuery}". Try adjusting your search or filters.`
+                : (showFirstTimeOnly 
+                  ? 'There are currently no prop firms offering first-time customer cashback. Toggle off to see recurring offers.'
+                  : 'There are currently no prop firms offering recurring customer cashback. Toggle on to see first-time offers.'
+                )
               }
             </p>
-            <button
-              onClick={() => setShowFirstTimeOnly(!showFirstTimeOnly)}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl typography-ui font-semibold transition-all duration-200 hover:brightness-110"
-              style={{
-                backgroundColor: theme.cta,
-                color: theme.ctaText,
-                boxShadow: `0 4px 16px ${theme.cta}40`
-              }}
-            >
-              {showFirstTimeOnly ? 'Show Recurring Offers' : 'Show First-Time Offers'}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {searchQuery.trim() && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:brightness-110"
+                  style={{
+                    backgroundColor: theme.cta,
+                    color: theme.ctaText,
+                    boxShadow: `0 4px 16px ${theme.cta}40`
+                  }}
+                >
+                  Clear Search
+                </button>
+              )}
+              {!searchQuery.trim() && (
+                <button
+                  onClick={() => setShowFirstTimeOnly(!showFirstTimeOnly)}
+                  className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:brightness-110"
+                  style={{
+                    backgroundColor: theme.cta,
+                    color: theme.ctaText,
+                    boxShadow: `0 4px 16px ${theme.cta}40`
+                  }}
+                >
+                  {showFirstTimeOnly ? 'Show Recurring Offers' : 'Show First-Time Offers'}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {/* Error handling notice */}
         {propFirms.length === 0 && (
           <div 
-            className="text-center py-12 sm:py-16 p-6 sm:p-8 rounded-2xl border"
+            className="text-center py-12 sm:py-16 w-full max-w-5xl mx-auto"
             style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              borderColor: 'rgba(239, 68, 68, 0.2)'
+              position: 'relative',
+              minHeight: '322px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1.59809px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '38.3541px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '31px 42px'
             }}
           >
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 bg-red-100">
-              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 bg-red-100">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="typography-h4 mb-3 sm:mb-4 text-red-800">
+            <h3 className="text-2xl font-bold mb-4 text-red-800">
               Unable to Load Prop Firms
             </h3>
-            <p className="typography-body mb-4 sm:mb-6 px-4 text-red-700">
+            <p className="text-base mb-6 px-4 text-red-700">
               We're having trouble loading the prop firms. Please refresh the page or try again later.
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl typography-ui font-semibold transition-all duration-200 hover:brightness-110 bg-red-600 text-white"
+              className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:brightness-110 bg-red-600 text-white"
             >
               Refresh Page
             </button>
@@ -290,20 +508,28 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
         )}
 
         <div 
-          className="text-center mt-12 sm:mt-16 p-4 sm:p-6 rounded-2xl border"
+          className="text-center mt-12 sm:mt-16 w-full max-w-5xl mx-auto"
           style={{
-            backgroundColor: theme.cardBackground,
-            backdropFilter: theme.backdropFilter,
-            borderColor: theme.cardBorder,
-            boxShadow: theme.cardShadow
+            position: 'relative',
+            minHeight: '121px',
+            background: 'rgba(151, 86, 125, 0.05)',
+            border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(31.9617px)',
+            borderRadius: '38.3541px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '31px 42px'
           }}
         >
-          <p className="typography-body mb-3 sm:mb-4" style={{ color: theme.textSecondary }}>Don't see your prop firm?</p>
+          <p className="text-base mb-4" style={{ color: theme.textSecondary }}>Don't see your prop firm?</p>
           <a 
             href="https://discord.gg/proptrading" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="typography-ui font-semibold transition-colors hover:opacity-80"
+            className="font-semibold transition-colors hover:opacity-80"
             style={{ color: theme.accent }}
           >
             Request it on Discord →
