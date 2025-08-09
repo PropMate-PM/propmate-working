@@ -258,6 +258,7 @@ const generateEmailTemplate = (
 export class EmailService {
   private static instance: EmailService
   private emailHistory: EmailData[] = []
+  private emailApiUrl: string | undefined = import.meta.env.VITE_EMAIL_API_URL
 
   static getInstance(): EmailService {
     if (!EmailService.instance) {
@@ -268,12 +269,31 @@ export class EmailService {
 
   async sendEmail(emailData: EmailData): Promise<EmailSendResult> {
     try {
-      // In production, this would make an API call to your email service
-      console.log('📧 Sending email:', {
-        to: emailData.to,
-        subject: emailData.subject,
-        type: emailData.type
-      })
+      // Prefer calling a backend email API if configured (e.g., Netlify Function)
+      if (this.emailApiUrl) {
+        const resp = await fetch(this.emailApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: emailData.to,
+            subject: emailData.subject,
+            html: emailData.html,
+            text: emailData.text,
+            type: emailData.type
+          })
+        })
+        const json = await resp.json().catch(() => ({}))
+        if (!resp.ok || json.success === false) {
+          throw new Error(json.error || `Email API error: ${resp.status}`)
+        }
+      } else {
+        // Fallback mock in development when no backend email API is available
+        console.log('📧 [Mock Email] No VITE_EMAIL_API_URL set. Logging email instead:', {
+          to: emailData.to,
+          subject: emailData.subject,
+          type: emailData.type
+        })
+      }
       
       // Log the communication to database
       await logEmailCommunication(
@@ -311,10 +331,7 @@ export class EmailService {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      return {
-        success: true,
-        messageId: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      }
+      return { success: true, messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` }
     } catch (error) {
       console.error('Error sending email:', error)
       return {

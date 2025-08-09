@@ -55,11 +55,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       errors.email = 'Please enter a valid email address'
     }
 
-    // Password validation
+    // Password validation (align with strong rules in auth.ts)
     if (!formData.password) {
       errors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters'
+    } else {
+      const hasMin = formData.password.length >= 8
+      const hasUpper = /[A-Z]/.test(formData.password)
+      const hasLower = /[a-z]/.test(formData.password)
+      const hasNum = /\d/.test(formData.password)
+      const hasSym = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(formData.password)
+      if (!(hasMin && hasUpper && hasLower && hasNum && hasSym)) {
+        errors.password = 'Use 8+ chars with uppercase, lowercase, number, and symbol'
+      }
     }
 
     // Confirm password validation (signup only)
