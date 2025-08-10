@@ -110,6 +110,23 @@ function AppContent() {
       }
     }
 
+    // Also handle direct magic-link callbacks that land on '/' with tokens in the hash
+    (async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        if (accessToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          setPostMagicNotice(true)
+          // Clean the URL hash to avoid re-processing on refresh
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+      } catch (e) {
+        console.error('Magic link handling error:', e)
+      }
+    })()
+
     return () => {
       subscription?.unsubscribe()
     }
