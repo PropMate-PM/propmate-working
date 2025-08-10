@@ -70,26 +70,33 @@ function AppContent() {
       setUser(user)
     })
 
-    // Check for password reset mode in URL
+    // Check for password reset mode in URL and signal from reset page
     const urlParams = new URLSearchParams(window.location.search)
     const mode = urlParams.get('mode')
-    
+    const recoveryFlag = urlParams.get('recovery')
+
     if (mode === 'reset-password') {
-      // Check if we have recovery tokens in localStorage
-      const storedToken = localStorage.getItem('supabase.auth.token')
-      if (storedToken) {
-        try {
-          const tokenData = JSON.parse(storedToken)
-          if (tokenData.type === 'recovery') {
-            setAuthModalMode('forgot-password')
-            setIsAuthModalOpen(true)
-            // Clean up the stored token
-            localStorage.removeItem('supabase.auth.token')
-            // Clean up URL
-            window.history.replaceState({}, '', window.location.pathname)
+      // Prefer an explicit flag set by reset-password.html
+      if (recoveryFlag === '1') {
+        setAuthModalMode('forgot-password')
+        setIsAuthModalOpen(true)
+        // Clean up URL quickly to avoid re-opening on refresh
+        window.history.replaceState({}, '', window.location.pathname)
+      } else {
+        // Fallback: Check if we have recovery tokens in localStorage
+        const storedToken = localStorage.getItem('supabase.auth.token')
+        if (storedToken) {
+          try {
+            const tokenData = JSON.parse(storedToken)
+            if (tokenData.type === 'recovery') {
+              setAuthModalMode('forgot-password')
+              setIsAuthModalOpen(true)
+              localStorage.removeItem('supabase.auth.token')
+              window.history.replaceState({}, '', window.location.pathname)
+            }
+          } catch (e) {
+            console.error('Error parsing stored token:', e)
           }
-        } catch (e) {
-          console.error('Error parsing stored token:', e)
         }
       }
     }
