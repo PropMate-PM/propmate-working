@@ -5,6 +5,20 @@
 
 
 [[redirects]]
+# Handle Supabase password reset links that point to /auth/reset-password
+  from = "/auth/reset-password"
+  to = "/reset-password.html"
+  status = 200
+  force = true
+
+[[redirects]]
+# Also handle /reset-password without .html
+  from = "/reset-password"
+  to = "/reset-password.html"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/email"
   to = "/.netlify/functions/send-email"
   status = 200
@@ -15,4 +29,10 @@
   [headers.values]
     Cache-Control = "public, max-age=600"
 
+
+[[redirects]]
+# SPA fallback to avoid Netlify 404 for client-side routes
+  from = "/*"
+  to = "/index.html"
+  status = 200
 

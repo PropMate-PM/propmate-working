@@ -19,7 +19,7 @@ function AppContent() {
   const [isCashbackModalOpen, setIsCashbackModalOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
-  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup' | 'forgot-password'>('signin')
   const [user, setUser] = useState<any>(null)
   const [showCookie, setShowCookie] = useState<boolean>(() => {
     try {
@@ -69,6 +69,30 @@ function AppContent() {
     const { data: { subscription } } = onAuthStateChange((user) => {
       setUser(user)
     })
+
+    // Check for password reset mode in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const mode = urlParams.get('mode')
+    
+    if (mode === 'reset-password') {
+      // Check if we have recovery tokens in localStorage
+      const storedToken = localStorage.getItem('supabase.auth.token')
+      if (storedToken) {
+        try {
+          const tokenData = JSON.parse(storedToken)
+          if (tokenData.type === 'recovery') {
+            setAuthModalMode('forgot-password')
+            setIsAuthModalOpen(true)
+            // Clean up the stored token
+            localStorage.removeItem('supabase.auth.token')
+            // Clean up URL
+            window.history.replaceState({}, '', window.location.pathname)
+          }
+        } catch (e) {
+          console.error('Error parsing stored token:', e)
+        }
+      }
+    }
 
     return () => {
       subscription?.unsubscribe()

@@ -3,7 +3,7 @@ import { X, Mail, Lock, CheckCircle, AlertCircle, Loader2, User, KeyRound } from
 import { useTheme } from '../contexts/ThemeContext'
 import { signUp, signIn, resetPassword } from '../lib/auth'
 import { emailService } from '../lib/emailService'
-import { validateEmail } from '../lib/supabase'
+import { validateEmail, supabase } from '../lib/supabase'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -35,6 +35,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [isPasswordResetMode, setIsPasswordResetMode] = useState(false) // true when user can set new password
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {}
@@ -56,8 +57,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       errors.email = 'Please enter a valid email address'
     }
 
-    // Password validation (not needed for forgot password)
-    if (mode !== 'forgot-password') {
+    // Password validation (not needed for forgot password email request, but needed for password reset)
+    if (mode !== 'forgot-password' || (mode === 'forgot-password' && isPasswordResetMode)) {
       if (!formData.password) {
         errors.password = 'Password is required'
       } else {
@@ -73,7 +74,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
     }
 
     // Confirm password validation (signup only)
-    if (mode === 'signup') {
+    if (mode === 'signup' || (mode === 'forgot-password' && isPasswordResetMode)) {
       if (!formData.confirmPassword) {
         errors.confirmPassword = 'Please confirm your password'
       } else if (formData.password !== formData.confirmPassword) {
@@ -122,15 +123,36 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
         }
         setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
       } else if (mode === 'forgot-password') {
-        result = await resetPassword(formData.email.trim())
-        console.log(`Password reset took: ${Date.now() - startTime}ms`)
-        setSuccess('Password reset email sent! Please check your inbox and follow the instructions.')
-        setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
-        // Switch back to signin mode after a delay
-        setTimeout(() => {
-          setMode('signin')
-          setSuccess('')
-        }, 3000)
+        if (isPasswordResetMode) {
+          // Update password for authenticated user
+          const { error } = await supabase.auth.updateUser({
+            password: formData.password
+          })
+          
+          if (error) throw error
+          
+          console.log(`Password update took: ${Date.now() - startTime}ms`)
+          setSuccess('Password updated successfully! You can now sign in with your new password.')
+          setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
+          
+          // Switch to signin mode and close modal after delay
+          setTimeout(() => {
+            setMode('signin')
+            setSuccess('')
+            onClose()
+          }, 2000)
+        } else {
+          // Send password reset email
+          result = await resetPassword(formData.email.trim())
+          console.log(`Password reset took: ${Date.now() - startTime}ms`)
+          setSuccess('Password reset email sent! Please check your inbox and follow the instructions.')
+          setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
+          // Switch back to signin mode after a delay
+          setTimeout(() => {
+            setMode('signin')
+            setSuccess('')
+          }, 3000)
+        }
       } else {
         result = await signIn(formData.email.trim(), formData.password)
         console.log(`Signin took: ${Date.now() - startTime}ms`)
@@ -193,6 +215,32 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       setAcceptedTerms(false)
     }
   }, [isOpen])
+
+  // Handle password reset mode when modal opens
+  React.useEffect(() => {
+    if (isOpen && mode === 'forgot-password') {
+      // Check if user is already authenticated with recovery session
+      const checkRecoverySession = async () => {
+        try {
+          const { data: { user }, error } = await supabase.auth.getUser()
+          if (user && !error) {
+            // User is authenticated with recovery token, show password update form
+            setIsPasswordResetMode(true)
+            setSuccess('You can now set your new password below.')
+            setFormData(prev => ({ ...prev, email: user.email || '' }))
+          } else {
+            // No recovery session, show email input for password reset request
+            setIsPasswordResetMode(false)
+          }
+        } catch (e) {
+          console.error('Error checking recovery session:', e)
+          setIsPasswordResetMode(false)
+        }
+      }
+      
+      checkRecoverySession()
+    }
+  }, [isOpen, mode])
 
   if (!isOpen) return null
 
@@ -262,9 +310,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             <div className="flex items-start space-x-3">
               <KeyRound className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: theme.accent }} />
               <div>
-                <p className="typography-small font-semibold mb-1" style={{ color: theme.accent }}>Password Reset</p>
+                <p className="typography-small font-semibold mb-1" style={{ color: theme.accent }}>
+                  {isPasswordResetMode ? 'Set New Password' : 'Password Reset'}
+                </p>
                 <p className="typography-small" style={{ color: theme.textSecondary }}>
-                  Enter your email address and we'll send you a link to reset your password.
+                  {isPasswordResetMode 
+                    ? 'Enter your new password below. Make sure it\'s strong and secure.'
+                    : 'Enter your email address and we\'ll send you a link to reset your password.'
+                  }
                 </p>
               </div>
             </div>
@@ -356,10 +409,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             )}
           </div>
 
-          {mode !== 'forgot-password' && (
+          {(mode !== 'forgot-password' || (mode === 'forgot-password' && isPasswordResetMode)) && (
             <div>
               <label className="block typography-small font-semibold mb-2" style={{ color: theme.textPrimary }}>
-                Password
+                {mode === 'forgot-password' && isPasswordResetMode ? 'New Password' : 'Password'}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5" style={{ color: theme.accent }} />
@@ -376,7 +429,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                     borderColor: formErrors.password ? '#dc2626' : 'rgba(255, 255, 255, 0.1)',
                     color: theme.textPrimary
                   }}
-                  placeholder="Enter your password"
+                  placeholder={mode === 'forgot-password' && isPasswordResetMode ? 'Enter your new password' : 'Enter your password'}
                 />
               </div>
               {formErrors.password && (
@@ -385,7 +438,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             </div>
           )}
 
-          {mode === 'signup' && (
+          {(mode === 'signup' || (mode === 'forgot-password' && isPasswordResetMode)) && (
             <div>
               <label className="block typography-small font-semibold mb-2" style={{ color: theme.textPrimary }}>
                 Confirm Password
@@ -477,7 +530,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                 Processing...
               </>
             ) : (
-              mode === 'signup' ? 'Create Account' : mode === 'forgot-password' ? 'Send Reset Email' : 'Sign In'
+              mode === 'signup' ? 'Create Account' : 
+              mode === 'forgot-password' ? (isPasswordResetMode ? 'Update Password' : 'Send Reset Email') : 
+              'Sign In'
             )}
           </button>
         </form>
