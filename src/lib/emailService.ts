@@ -30,7 +30,7 @@ const EMAIL_CONFIG = {
   FROM_EMAIL: 'noreply@propmate.com',
   FROM_NAME: 'PropMate',
   SUPPORT_EMAIL: 'support@propmate.com',
-  ADMIN_EMAIL: 'admin@propmate.com'
+  ADMIN_EMAIL: 'admin@propmate.site'
 }
 
 // Email templates
@@ -258,7 +258,7 @@ const generateEmailTemplate = (
 export class EmailService {
   private static instance: EmailService
   private emailHistory: EmailData[] = []
-  private emailApiUrl: string | undefined = import.meta.env.VITE_EMAIL_API_URL
+  private emailApiUrl: string | undefined = import.meta.env.VITE_EMAIL_API_URL || `${location.origin}/functions/v1/send-email`
 
   static getInstance(): EmailService {
     if (!EmailService.instance) {
@@ -271,9 +271,15 @@ export class EmailService {
     try {
       // Prefer calling a backend email API if configured (e.g., Netlify Function)
       if (this.emailApiUrl) {
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+        const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (anonKey) {
+          authHeaders['Authorization'] = `Bearer ${anonKey}`
+          authHeaders['apikey'] = anonKey
+        }
         const resp = await fetch(this.emailApiUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify({
             to: emailData.to,
             subject: emailData.subject,
@@ -309,17 +315,14 @@ export class EmailService {
       await logAuditEvent(
         emailData.userId || null,
         'email_sent',
-        null,
-        null,
-        null,
         { 
           to: emailData.to, 
           subject: emailData.subject, 
           type: emailData.type,
-          html_length: emailData.html.length 
-        },
-        getUserIP(),
-        typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
+          html_length: emailData.html.length,
+          ip: getUserIP(),
+          ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
+        }
       )
       
       // Store in history

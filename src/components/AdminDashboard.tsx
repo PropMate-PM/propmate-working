@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { X, Users, DollarSign, TrendingUp, Mail, Settings, FileText, CreditCard, BarChart3, Send, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase, type CashbackSubmission, type PayoutRecord } from '../lib/supabase'
+import { hasAdminPermission } from '../lib/auth'
+import { emailService } from '../lib/emailService'
+import { Email } from '../services/emailService'
 
 interface AdminDashboardProps {
   isOpen: boolean
@@ -58,9 +61,17 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
   const [processingPayout, setProcessingPayout] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen && user) {
-      fetchAllData()
+    const load = async () => {
+      if (isOpen && user) {
+        const allowed = await hasAdminPermission('admin')
+        if (!allowed) {
+          onClose()
+          return
+        }
+        fetchAllData()
+      }
     }
+    load()
   }, [isOpen, user])
 
   // Set fixed container height after initial load
@@ -194,7 +205,34 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
       
       // Refresh submissions
       await fetchSubmissions()
-      
+
+      // Send status emails
+      const submission = submissions.find(s => s.id === submissionId)
+      if (submission) {
+        try {
+          if (status === 'rejected') {
+            await emailService.sendStatusChangeEmail(
+              submission.email,
+              submission.name,
+              'rejected',
+              submission.purchase_amount,
+              submission.prop_firms?.name || 'Unknown Firm',
+              submission.user_id || undefined
+            )
+          } else if (status === 'paid') {
+            // In this UI, 'paid' means approved for payout, so notify processing
+            const cashbackAmount = (submission.purchase_amount * (submission.prop_firms?.cashback_percentage || 0)) / 100
+            await Email.paymentProcessing(
+              submission.email,
+              cashbackAmount,
+              'Crypto Wallet'
+            )
+          }
+        } catch (e) {
+          console.warn('Status email error (ignored):', e)
+        }
+      }
+
       // If approved (marked as paid), create payout record
       if (status === 'paid') {
         const submission = submissions.find(s => s.id === submissionId)
@@ -245,6 +283,26 @@ export default function AdminDashboard({ isOpen, onClose, user }: AdminDashboard
 
       if (error) throw error
       await fetchPayouts()
+
+      // Send payment confirmation email
+      const payout = payouts.find(p => p.id === payoutId)
+      if (payout) {
+        try {
+          await emailService.sendPaymentSentEmail(
+            payout.user_email,
+            {
+              userName: payout.user_email,
+              firmName: 'Cashback',
+              amount: payout.payout_amount,
+              walletAddress: payout.crypto_wallet_address,
+              transactionHash,
+              requestId: payoutId
+            }
+          )
+        } catch (e) {
+          console.warn('Payment email error (ignored):', e)
+        }
+      }
     } catch (err) {
       console.error('Error marking payout complete:', err)
       alert('Error updating payout status')

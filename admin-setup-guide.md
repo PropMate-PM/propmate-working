@@ -12,7 +12,7 @@
    # Edit .env.local with your actual values
    VITE_SUPABASE_URL=https://gwpbbzjqharvfuuxxuek.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cGJiempxaGFydmZ1dXh4dWVrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzYxNTMwNywiZXhwIjoyMDY5MTkxMzA3fQ.yNUrn4tEYA0v1Q5TS8syCLVOUX9XGP3RIt3f4tpFhps
-   ADMIN_EMAIL=admin@propmate.com
+   ADMIN_EMAIL=admin@propmate.site
    ADMIN_PASSWORD=Yawar@Farooq#123
    ```
 
@@ -36,14 +36,14 @@ If the script doesn't work, you can create the admin user manually:
    - Go to your Supabase project dashboard
    - Navigate to Authentication > Users
    - Click "Add User"
-   - Enter email: `admin@propmate.com`
+   - Enter email: `admin@propmate.site`
    - Set a strong password
    - Enable "Email Confirmed"
 
 2. **Assign Admin Role via SQL**
    ```sql
    -- Get the user ID first
-   SELECT id, email FROM auth.users WHERE email = 'admin@propmate.com';
+   SELECT id, email FROM auth.users WHERE email = 'admin@propmate.site';
    
    -- Insert admin role (replace USER_ID with actual ID)
    INSERT INTO admin_roles (user_id, role, granted_by, is_active)

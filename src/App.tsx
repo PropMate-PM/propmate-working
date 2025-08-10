@@ -11,6 +11,7 @@ import SplineBackground from './components/SplineBackground'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { supabase, type PropFirm } from './lib/supabase'
 import { onAuthStateChange, signOut } from './lib/auth'
+import CookieConsent from './components/CookieConsent'
 
 function AppContent() {
   const [propFirms, setPropFirms] = useState<PropFirm[]>([])
@@ -20,6 +21,45 @@ function AppContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
   const [user, setUser] = useState<any>(null)
+  const [showCookie, setShowCookie] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem('cookie_consent')
+      return v !== 'accepted' && v !== 'declined'
+    } catch { return true }
+  })
+
+  // Analytics & Sentry loaders gated by consent
+  useEffect(() => {
+    try {
+      const val = localStorage.getItem('cookie_consent')
+      if (val === 'accepted') {
+        const gaId = import.meta.env.VITE_GA_ID
+        if (gaId) {
+          const s1 = document.createElement('script')
+          s1.async = true
+          s1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`
+          document.head.appendChild(s1)
+          const s2 = document.createElement('script')
+          s2.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','${gaId}');`
+          document.head.appendChild(s2)
+        }
+        const sentryDsn = import.meta.env.VITE_SENTRY_DSN
+        if (sentryDsn) {
+          const sc = document.createElement('script')
+          sc.src = 'https://browser.sentry-cdn.com/7.116.0/bundle.min.js'
+          sc.crossOrigin = 'anonymous'
+          sc.onload = () => {
+            // @ts-ignore
+            if (window.Sentry) {
+              // @ts-ignore
+              window.Sentry.init({ dsn: sentryDsn })
+            }
+          }
+          document.head.appendChild(sc)
+        }
+      }
+    } catch {}
+  }, [])
   const { theme } = useTheme()
 
   useEffect(() => {
@@ -164,6 +204,12 @@ function AppContent() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialMode={authModalMode}
+      />
+
+      <CookieConsent
+        isVisible={showCookie}
+        onAccept={() => { try { localStorage.setItem('cookie_consent','accepted') } catch {}; setShowCookie(false) }}
+        onDecline={() => { try { localStorage.setItem('cookie_consent','declined') } catch {}; setShowCookie(false) }}
       />
     </div>
   )

@@ -15,7 +15,7 @@
     "deploy:check": "npm run lint && npm run test:security && npm run build:production"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.53.0",
+    "@supabase/supabase-js": "^2.54.0",
     "dotenv": "^17.2.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

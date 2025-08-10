@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { logAuditEvent, getUserIP } from './auth'
 import { emailService } from './emailService'
+import { Email } from '../services/emailService'
 import type { CashbackSubmission, FraudAlert, AuditLogEntry, PayoutRecord } from './supabase'
 
 export interface AdminAnalytics {
@@ -271,7 +272,7 @@ export const approveCashbackRequest = async (
       return { success: false, error: 'Failed to update submission' }
     }
 
-    // Send approval email
+    // Send approval email (transactional)
     try {
       await emailService.sendRequestApprovedEmail(
         submission.email,
@@ -284,6 +285,12 @@ export const approveCashbackRequest = async (
           walletAddress: submission.wallet_address
         },
         submission.user_id
+      )
+      // Optional: also trigger payments category notification
+      await Email.paymentProcessing(
+        submission.email,
+        submission.cashback_amount || 0,
+        'Crypto Wallet'
       )
     } catch (emailError) {
       console.error('Error sending approval email:', emailError)
@@ -357,6 +364,8 @@ export const rejectCashbackRequest = async (
         submission.firm_name || 'Unknown Firm',
         submission.user_id
       )
+      // Optional: notify admin
+      await Email.adminAlert('admin@propmate.site', 'warn', `Request ${requestId} rejected: ${reason}`)
     } catch (emailError) {
       console.error('Error sending rejection email:', emailError)
       // Don't fail the rejection if email fails
@@ -462,6 +471,12 @@ export const processPayout = async (
           requestId: submission.id
         },
         submission.user_id
+      )
+      // Optional: payments category summary
+      await Email.paymentCashback(
+        submission.email,
+        payoutAmount,
+        submission.firm_name || 'Unknown Firm'
       )
     } catch (emailError) {
       console.error('Error sending payment email:', emailError)

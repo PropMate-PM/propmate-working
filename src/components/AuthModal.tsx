@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { X, Mail, Lock, CheckCircle, AlertCircle, Loader2, User } from 'lucide-react'
+import { X, Mail, Lock, CheckCircle, AlertCircle, Loader2, User, KeyRound } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
-import { signUp, signIn } from '../lib/auth'
+import { signUp, signIn, resetPassword } from '../lib/auth'
+import { emailService } from '../lib/emailService'
 import { validateEmail } from '../lib/supabase'
 
 interface AuthModalProps {
@@ -21,7 +22,7 @@ interface FormErrors {
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModalProps) {
   const { theme } = useTheme()
-  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode)
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot-password'>(initialMode)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -55,17 +56,19 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       errors.email = 'Please enter a valid email address'
     }
 
-    // Password validation (align with strong rules in auth.ts)
-    if (!formData.password) {
-      errors.password = 'Password is required'
-    } else {
-      const hasMin = formData.password.length >= 8
-      const hasUpper = /[A-Z]/.test(formData.password)
-      const hasLower = /[a-z]/.test(formData.password)
-      const hasNum = /\d/.test(formData.password)
-      const hasSym = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(formData.password)
-      if (!(hasMin && hasUpper && hasLower && hasNum && hasSym)) {
-        errors.password = 'Use 8+ chars with uppercase, lowercase, number, and symbol'
+    // Password validation (not needed for forgot password)
+    if (mode !== 'forgot-password') {
+      if (!formData.password) {
+        errors.password = 'Password is required'
+      } else {
+        const hasMin = formData.password.length >= 8
+        const hasUpper = /[A-Z]/.test(formData.password)
+        const hasLower = /[a-z]/.test(formData.password)
+        const hasNum = /\d/.test(formData.password)
+        const hasSym = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(formData.password)
+        if (!(hasMin && hasUpper && hasLower && hasNum && hasSym)) {
+          errors.password = 'Use 8+ chars with uppercase, lowercase, number, and symbol'
+        }
       }
     }
 
@@ -107,7 +110,27 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
         result = await signUp(formData.email.trim(), formData.password)
         console.log(`Signup took: ${Date.now() - startTime}ms`)
         setSuccess('Account created successfully! Please check your email to verify your account.')
-        setFormData({ email: '', password: '', confirmPassword: '' })
+        // Trigger welcome email (non-blocking)
+        const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim()
+        try {
+          await emailService.sendEnhancedWelcomeEmail(
+            formData.email.trim(),
+            fullName || formData.email.trim()
+          )
+        } catch (e) {
+          console.warn('Welcome email failed (ignored):', e)
+        }
+        setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
+      } else if (mode === 'forgot-password') {
+        result = await resetPassword(formData.email.trim())
+        console.log(`Password reset took: ${Date.now() - startTime}ms`)
+        setSuccess('Password reset email sent! Please check your inbox and follow the instructions.')
+        setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
+        // Switch back to signin mode after a delay
+        setTimeout(() => {
+          setMode('signin')
+          setSuccess('')
+        }, 3000)
       } else {
         result = await signIn(formData.email.trim(), formData.password)
         console.log(`Signin took: ${Date.now() - startTime}ms`)
@@ -147,8 +170,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
     }
   }
 
-  const toggleMode = () => {
-    setMode(mode === 'signin' ? 'signup' : 'signin')
+  const toggleMode = (newMode?: 'signin' | 'signup' | 'forgot-password') => {
+    if (newMode) {
+      setMode(newMode)
+    } else {
+      setMode(mode === 'signin' ? 'signup' : 'signin')
+    }
     setError('')
     setSuccess('')
     setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
@@ -187,7 +214,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
       >
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <h2 className="typography-h4" style={{ color: theme.textPrimary }}>
-            {mode === 'signup' ? 'Create Account' : 'Sign In'}
+            {mode === 'signup' ? 'Create Account' : mode === 'forgot-password' ? 'Reset Password' : 'Sign In'}
           </h2>
           <button
             onClick={onClose}
@@ -221,6 +248,26 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
           >
             <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: theme.accent }} />
             <p className="typography-small font-semibold" style={{ color: theme.accent }}>{success}</p>
+          </div>
+        )}
+
+        {mode === 'forgot-password' && (
+          <div 
+            className="p-4 rounded-2xl border mb-4 sm:mb-6"
+            style={{
+              backgroundColor: `${theme.accent}10`,
+              borderColor: `${theme.accent}20`
+            }}
+          >
+            <div className="flex items-start space-x-3">
+              <KeyRound className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: theme.accent }} />
+              <div>
+                <p className="typography-small font-semibold mb-1" style={{ color: theme.accent }}>Password Reset</p>
+                <p className="typography-small" style={{ color: theme.textSecondary }}>
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -309,32 +356,34 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             )}
           </div>
 
-          <div>
-            <label className="block typography-small font-semibold mb-2" style={{ color: theme.textPrimary }}>
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5" style={{ color: theme.accent }} />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-2xl border focus:ring-2 focus:border-transparent transition-all typography-small sm:typography-body"
-                style={{
-                  background: 'rgba(151, 86, 125, 0.05)',
-                  backdropFilter: 'blur(31.9617px)',
-                  borderColor: formErrors.password ? '#dc2626' : 'rgba(255, 255, 255, 0.1)',
-                  color: theme.textPrimary
-                }}
-                placeholder="Enter your password"
-              />
+          {mode !== 'forgot-password' && (
+            <div>
+              <label className="block typography-small font-semibold mb-2" style={{ color: theme.textPrimary }}>
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5" style={{ color: theme.accent }} />
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-2xl border focus:ring-2 focus:border-transparent transition-all typography-small sm:typography-body"
+                  style={{
+                    background: 'rgba(151, 86, 125, 0.05)',
+                    backdropFilter: 'blur(31.9617px)',
+                    borderColor: formErrors.password ? '#dc2626' : 'rgba(255, 255, 255, 0.1)',
+                    color: theme.textPrimary
+                  }}
+                  placeholder="Enter your password"
+                />
+              </div>
+              {formErrors.password && (
+                <p className="mt-1 typography-small" style={{ color: '#dc2626' }}>{formErrors.password}</p>
+              )}
             </div>
-            {formErrors.password && (
-              <p className="mt-1 typography-small" style={{ color: '#dc2626' }}>{formErrors.password}</p>
-            )}
-          </div>
+          )}
 
           {mode === 'signup' && (
             <div>
@@ -428,20 +477,38 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                 Processing...
               </>
             ) : (
-              mode === 'signup' ? 'Create Account' : 'Sign In'
+              mode === 'signup' ? 'Create Account' : mode === 'forgot-password' ? 'Send Reset Email' : 'Sign In'
             )}
           </button>
         </form>
 
-        <div className="mt-4 sm:mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center space-y-2">
+          {mode === 'signin' && (
+            <p className="typography-small">
+              <button
+                type="button"
+                onClick={() => toggleMode('forgot-password')}
+                className="typography-ui font-semibold transition-colors hover:opacity-80"
+                style={{ color: theme.accent }}
+              >
+                Forgot your password?
+              </button>
+            </p>
+          )}
+          
           <p className="typography-small sm:typography-body" style={{ color: theme.textSecondary }}>
-            {mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
+            {mode === 'signup' ? 'Already have an account?' : 
+             mode === 'forgot-password' ? 'Remember your password?' : 
+             "Don't have an account?"}
             <button
-              onClick={toggleMode}
+              type="button"
+              onClick={() => toggleMode(mode === 'forgot-password' ? 'signin' : mode === 'signin' ? 'signup' : 'signin')}
               className="ml-2 typography-ui font-semibold transition-colors hover:opacity-80"
               style={{ color: theme.accent }}
             >
-              {mode === 'signup' ? 'Sign In' : 'Sign Up'}
+              {mode === 'signup' ? 'Sign In' : 
+               mode === 'forgot-password' ? 'Back to Sign In' : 
+               'Sign Up'}
             </button>
           </p>
         </div>

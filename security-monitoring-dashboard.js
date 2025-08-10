@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 const config = {
   supabaseUrl: process.env.VITE_SUPABASE_URL,
   supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  alertEmail: process.env.ALERT_EMAIL || 'admin@propmate.com',
+  alertEmail: process.env.ALERT_EMAIL || 'admin@propmate.site',
   monitoringInterval: parseInt(process.env.MONITORING_INTERVAL) || 300000, // 5 minutes
   enableSlackAlerts: process.env.SLACK_WEBHOOK_URL ? true : false,
   slackWebhookUrl: process.env.SLACK_WEBHOOK_URL

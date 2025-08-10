@@ -3,6 +3,7 @@ import { X, CheckCircle, AlertCircle, Loader2, Mail, User, DollarSign, Wallet, N
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase, type PropFirm, validateEmail, validateWalletAddress, checkDuplicateSubmission } from '../lib/supabase'
 import { emailService } from '../lib/emailService'
+// Using existing emailService for transactional confirmations
 
 interface CashbackModalProps {
   isOpen: boolean
@@ -237,24 +238,17 @@ export default function CashbackModal({ isOpen, onClose, propFirm, user }: Cashb
       }
 
       console.log('Submission successful, sending confirmation email...')
-
-      // Send confirmation email (temporarily disabled for debugging)
-      /*
       try {
-        console.log('Attempting to send confirmation email...')
+        const purchaseAmount = parseFloat(formData.purchaseAmount)
         await emailService.sendConfirmationEmail(
           formData.email.trim(),
           formData.name.trim(),
           propFirm.name,
-          parseFloat(formData.purchaseAmount)
+          purchaseAmount
         )
-        console.log('Confirmation email sent successfully')
       } catch (emailError) {
         console.error('Error sending confirmation email:', emailError)
-        // Don't fail the submission if email fails
-        console.log('Continuing with submission despite email error')
       }
-      */
 
       console.log('Setting success state...')
       setIsSuccess(true)
@@ -292,6 +286,7 @@ export default function CashbackModal({ isOpen, onClose, propFirm, user }: Cashb
   }
 
   if (!isOpen) return null
+  // Enforce login-only submissions at UI level (guests cannot submit). UI already requires sign-up upstream.
 
   return (
     <div 

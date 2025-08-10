@@ -27,7 +27,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Admin Configuration
-ADMIN_EMAIL=admin@propmate.com
+ADMIN_EMAIL=admin@propmate.site
 ADMIN_PASSWORD=YourSecureAdminPassword123!
 
 # Email Service (choose one)

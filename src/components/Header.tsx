@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Menu, X, User, LogOut, Settings } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
+import { hasAdminPermission } from '../lib/auth'
 
 interface HeaderProps {
   onAdminClick: () => void
@@ -14,8 +15,28 @@ export default function Header({ onAdminClick, user, onAuthClick, onSignOut }: H
 
   const { theme } = useTheme()
 
-  // Check if current user is admin
-  const isAdmin = user?.email === 'admin@propmate.com'
+  // Check if current user is admin (role-based via Supabase)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    const check = async () => {
+      if (!user) {
+        if (isMounted) setIsAdmin(false)
+        return
+      }
+      try {
+        const allowed = await hasAdminPermission('admin')
+        if (isMounted) setIsAdmin(Boolean(allowed))
+      } catch {
+        if (isMounted) setIsAdmin(false)
+      }
+    }
+    check()
+    return () => {
+      isMounted = false
+    }
+  }, [user])
 
 
 

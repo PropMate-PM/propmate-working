@@ -544,11 +544,9 @@ export const hasAdminPermission = async (requiredRole: 'admin' | 'super_admin' |
 }
 
 // Legacy function for backward compatibility
-export const isAdminUser = async (user: any): Promise<boolean> => {
-  if (!user) return false
-  
-  // Simple email-based admin check for now
-  return user.email === 'admin@propmate.com'
+export const isAdminUser = async (maybeUser: any): Promise<boolean> => {
+  if (!maybeUser) return false
+  return await isAdmin(maybeUser.id)
 }
 
 export const onAuthStateChange = (callback: (user: any) => void) => {

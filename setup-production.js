@@ -41,7 +41,7 @@ const config = {
   supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
   supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
-  adminEmail: process.env.ADMIN_EMAIL || 'admin@propmate.com',
+  adminEmail: process.env.ADMIN_EMAIL || 'admin@propmate.site',
   adminPassword: process.env.ADMIN_PASSWORD,
   resendApiKey: process.env.RESEND_API_KEY,
   sendgridApiKey: process.env.SENDGRID_API_KEY
@@ -62,7 +62,7 @@ function checkEnvironment() {
     log.info('  VITE_SUPABASE_URL - Your Supabase project URL');
     log.info('  SUPABASE_SERVICE_ROLE_KEY - Your Supabase service role key (for admin operations)');
     log.info('  VITE_SUPABASE_ANON_KEY - Your Supabase anon key');
-    log.info('  ADMIN_EMAIL - Initial admin email (optional, defaults to admin@propmate.com)');
+    log.info('  ADMIN_EMAIL - Initial admin email (optional, defaults to admin@propmate.site)');
     log.info('  ADMIN_PASSWORD - Initial admin password (optional, will prompt if not set)');
     log.info('  RESEND_API_KEY or SENDGRID_API_KEY - Email service API key');
     return false;

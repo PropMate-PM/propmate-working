@@ -72,7 +72,7 @@ export const checkRateLimit = async (...) => {
 2. **Open the application in your browser**
 
 3. **Try logging in with:**
-   - Email: `admin@propmate.com`
+   - Email: `admin@propmate.site`
    - Password: `Yawar@Farooq#123`
 
 4. **Check browser console for any errors**
@@ -146,7 +146,7 @@ If issues persist:
 ### 🔐 Admin Account Details
 
 For testing purposes, you can use:
-- **Email:** `admin@propmate.com`
+- **Email:** `admin@propmate.site`
 - **Password:** `Yawar@Farooq#123`
 
 ### 📝 Environment File Structure

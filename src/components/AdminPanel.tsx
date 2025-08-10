@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, CheckCircle, Clock, XCircle, ExternalLink, Settings } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase, type CashbackSubmission } from '../lib/supabase'
+import { hasAdminPermission } from '../lib/auth'
 import AdminDashboard from './AdminDashboard'
 import UserSavingsTracker from './UserSavingsTracker'
 
@@ -17,8 +18,26 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'rejected'>('all')
 
-  // Check if current user is admin
-  const isAdmin = user?.email === 'admin@propmate.com'
+  // Check if current user is admin (role-based)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    const check = async () => {
+      if (!user) {
+        if (mounted) setIsAdmin(false)
+        return
+      }
+      try {
+        const allowed = await hasAdminPermission('admin')
+        if (mounted) setIsAdmin(Boolean(allowed))
+      } catch {
+        if (mounted) setIsAdmin(false)
+      }
+    }
+    check()
+    return () => { mounted = false }
+  }, [user])
 
   useEffect(() => {
     if (isOpen && user) {

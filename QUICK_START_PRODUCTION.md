@@ -82,7 +82,7 @@ npm run build:production
 ### Admin Access Issues
 ```sql
 -- Check admin user exists
-SELECT id, email FROM auth.users WHERE email = 'admin@propmate.com';
+SELECT id, email FROM auth.users WHERE email = 'admin@propmate.site';
 
 -- Assign admin role (replace USER_ID)
 INSERT INTO admin_roles (user_id, role, is_active) 

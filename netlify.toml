@@ -3,6 +3,13 @@
   publish = "dist"
   functions = "netlify/functions"
 
+
+[[redirects]]
+  from = "/api/email"
+  to = "/.netlify/functions/send-email"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
