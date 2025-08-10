@@ -438,6 +438,34 @@ export const resetPassword = async (email: string): Promise<any> => {
   }
 }
 
+// Send passwordless magic link and redirect back to profile
+export const sendMagicLink = async (email: string): Promise<any> => {
+  if (!validateEmail(email)) {
+    throw new Error('Please enter a valid email address')
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback.html?openProfile=1`
+      }
+    })
+    if (error) throw error
+    return data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateProfile = async (fields: { firstName?: string; lastName?: string }): Promise<void> => {
+  const updates: any = { data: {} }
+  if (fields.firstName !== undefined) updates.data.first_name = fields.firstName
+  if (fields.lastName !== undefined) updates.data.last_name = fields.lastName
+  const { error } = await supabase.auth.updateUser(updates)
+  if (error) throw error
+}
+
 // Update password with validation
 export const updatePassword = async (newPassword: string): Promise<any> => {
   // Validate password

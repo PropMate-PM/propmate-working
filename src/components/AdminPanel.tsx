@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { X, CheckCircle, Clock, XCircle, ExternalLink, Settings } from 'lucide-react'
+import { X, CheckCircle, Clock, XCircle, ExternalLink, Settings, Lock, User as UserIcon, Save } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase, type CashbackSubmission } from '../lib/supabase'
-import { hasAdminPermission } from '../lib/auth'
+import { hasAdminPermission, updatePassword, updateProfile } from '../lib/auth'
 import AdminDashboard from './AdminDashboard'
 import UserSavingsTracker from './UserSavingsTracker'
 
@@ -17,6 +17,21 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
   const [submissions, setSubmissions] = useState<CashbackSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'rejected'>('all')
+
+  // Profile state
+  const [firstName, setFirstName] = useState<string>('')
+  const [lastName, setLastName] = useState<string>('')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileMessage, setProfileMessage] = useState<string>('')
+  const [profileError, setProfileError] = useState<string>('')
+
+  // Change password state
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState('')
+  const [passwordError, setPasswordError] = useState('')
 
   // Check if current user is admin (role-based)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -51,6 +66,15 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
     }
   }, [isOpen, user, isAdmin])
 
+  // Initialize profile fields from user metadata
+  useEffect(() => {
+    try {
+      const meta = (user?.user_metadata as any) || {}
+      setFirstName(meta.first_name || '')
+      setLastName(meta.last_name || '')
+    } catch {}
+  }, [user])
+
   const fetchUserSubmissions = async () => {
     if (!user || isAdmin) return
     
@@ -81,6 +105,48 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
   const filteredSubmissions = submissions.filter(sub => 
     filter === 'all' || sub.status === filter
   )
+
+  const handleSaveProfile = async () => {
+    setProfileError('')
+    setProfileMessage('')
+    setSavingProfile(true)
+    try {
+      await updateProfile({ firstName, lastName })
+      setProfileMessage('Profile updated')
+      // Auto clear message
+      setTimeout(() => setProfileMessage(''), 3000)
+    } catch (e: any) {
+      setProfileError(e?.message || 'Failed to update profile')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordError('')
+    setPasswordMessage('')
+    if (!newPassword || !confirmNewPassword) {
+      setPasswordError('Please enter and confirm your new password')
+      return
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+    setSavingPassword(true)
+    try {
+      await updatePassword(newPassword)
+      setPasswordMessage('Password updated successfully')
+      setNewPassword('')
+      setConfirmNewPassword('')
+      setIsChangingPassword(false)
+      setTimeout(() => setPasswordMessage(''), 3000)
+    } catch (e: any) {
+      setPasswordError(e?.message || 'Failed to update password')
+    } finally {
+      setSavingPassword(false)
+    }
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -164,6 +230,147 @@ export default function AdminPanel({ isOpen, onClose, user }: AdminPanelProps) {
         ) : (
           <div className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto space-y-4 sm:space-y-6">
+            {/* Profile Section */}
+            <div 
+              className="p-4 sm:p-6 rounded-2xl border"
+              style={{
+                background: 'rgba(151, 86, 125, 0.05)',
+                border: '1.59809px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <h3 className="typography-h4 mb-4" style={{ color: theme.textPrimary }}>Profile</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>First Name</label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: theme.accent }} />
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-2xl border typography-small"
+                      style={{
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                        color: theme.textPrimary
+                      }}
+                      placeholder="First name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Last Name</label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: theme.accent }} />
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-2xl border typography-small"
+                      style={{
+                        background: 'rgba(151, 86, 125, 0.05)',
+                        border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                        color: theme.textPrimary
+                      }}
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Email</label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full px-3 py-2.5 rounded-2xl border typography-small opacity-80"
+                    style={{
+                      background: 'rgba(151, 86, 125, 0.05)',
+                      border: '1.59809px solid rgba(255, 255, 255, 0.1)',
+                      color: theme.textPrimary
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 mt-4">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="px-4 py-2 rounded-2xl typography-ui font-semibold transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: theme.accent, color: theme.ctaText }}
+                >
+                  {savingProfile ? 'Saving…' : 'Save Profile'}
+                </button>
+                {profileMessage && <span className="typography-small" style={{ color: theme.accent }}>{profileMessage}</span>}
+                {profileError && <span className="typography-small" style={{ color: '#dc2626' }}>{profileError}</span>}
+              </div>
+
+              <hr className="my-6" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
+
+              <div>
+                <label className="block typography-small font-semibold mb-2" style={{ color: theme.textSecondary }}>Password</label>
+                {!isChangingPassword ? (
+                  <div className="flex items-center justify-between">
+                    <div className="font-mono opacity-80" style={{ color: theme.textSecondary }}>********</div>
+                    <button
+                      onClick={() => { setIsChangingPassword(true); setPasswordError(''); setPasswordMessage('') }}
+                      className="px-4 py-2 rounded-2xl typography-ui font-semibold transition-colors"
+                      style={{ background: 'rgba(151, 86, 125, 0.05)', color: theme.textPrimary, border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      Change Password
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: theme.accent }} />
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-2xl border typography-small"
+                          style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', color: theme.textPrimary }}
+                          placeholder="New password"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: theme.accent }} />
+                        <input
+                          type="password"
+                          value={confirmNewPassword}
+                          onChange={(e) => setConfirmNewPassword(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-2xl border typography-small"
+                          style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1.59809px solid rgba(255, 255, 255, 0.1)', color: theme.textPrimary }}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                    </div>
+                    <div className="md:col-span-2 flex items-center space-x-3">
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={savingPassword}
+                        className="px-4 py-2 rounded-2xl typography-ui font-semibold transition-colors disabled:opacity-50"
+                        style={{ backgroundColor: theme.accent, color: theme.ctaText }}
+                      >
+                        {savingPassword ? 'Updating…' : 'Update Password'}
+                      </button>
+                      <button
+                        onClick={() => { setIsChangingPassword(false); setNewPassword(''); setConfirmNewPassword(''); setPasswordError(''); setPasswordMessage('') }}
+                        className="px-4 py-2 rounded-2xl typography-ui font-semibold transition-colors"
+                        style={{ background: 'rgba(151, 86, 125, 0.05)', color: theme.textPrimary, border: '1px solid rgba(255,255,255,0.1)' }}
+                      >
+                        Cancel
+                      </button>
+                      {passwordMessage && <span className="typography-small" style={{ color: theme.accent }}>{passwordMessage}</span>}
+                      {passwordError && <span className="typography-small" style={{ color: '#dc2626' }}>{passwordError}</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             {/* User Savings Tracker */}
             <UserSavingsTracker user={user} />
 

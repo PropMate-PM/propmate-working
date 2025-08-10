@@ -75,6 +75,15 @@ function AppContent() {
     const mode = urlParams.get('mode')
     const recoveryFlag = urlParams.get('recovery')
 
+    // Open user dashboard/profile directly after magic link sign-in
+    const openProfile = localStorage.getItem('pm_open_profile')
+    if (openProfile === '1') {
+      setIsAdminPanelOpen(true)
+      // clean up flag
+      localStorage.removeItem('pm_open_profile')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+
     if (mode === 'reset-password') {
       // Prefer an explicit flag set by reset-password.html
       if (recoveryFlag === '1') {

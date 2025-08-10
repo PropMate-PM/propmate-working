@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { X, Mail, Lock, CheckCircle, AlertCircle, Loader2, User, KeyRound } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
-import { signUp, signIn, resetPassword } from '../lib/auth'
+import { signUp, signIn, resetPassword, sendMagicLink } from '../lib/auth'
 import { emailService } from '../lib/emailService'
 import { validateEmail, supabase } from '../lib/supabase'
 
@@ -142,10 +142,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             onClose()
           }, 2000)
         } else {
-          // Send password reset email
-          result = await resetPassword(formData.email.trim())
-          console.log(`Password reset took: ${Date.now() - startTime}ms`)
-          setSuccess('Password reset email sent! Please check your inbox and follow the instructions.')
+          // Send magic link instead of reset password
+          await sendMagicLink(formData.email.trim())
+          console.log(`Magic link sent in: ${Date.now() - startTime}ms`)
+          setSuccess('Magic sign-in link sent! Open it to access your dashboard and change your password.')
           setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
           // Switch back to signin mode after a delay
           setTimeout(() => {
