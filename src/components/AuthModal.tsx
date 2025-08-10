@@ -145,13 +145,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
           // Send magic link instead of reset password
           await sendMagicLink(formData.email.trim())
           console.log(`Magic link sent in: ${Date.now() - startTime}ms`)
-          setSuccess('Magic sign-in link sent! Open it to access your dashboard and change your password.')
+          setSuccess('Magic sign-in link sent! Check your email and click the link to sign in, then open your dashboard to change your password.')
           setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' })
-          // Switch back to signin mode after a delay
-          setTimeout(() => {
-            setMode('signin')
-            setSuccess('')
-          }, 3000)
+          // Do NOT auto-switch modes; keep message visible until user interacts
         }
       } else {
         result = await signIn(formData.email.trim(), formData.password)

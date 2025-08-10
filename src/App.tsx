@@ -18,6 +18,7 @@ function AppContent() {
   const [selectedPropFirm, setSelectedPropFirm] = useState<PropFirm | null>(null)
   const [isCashbackModalOpen, setIsCashbackModalOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
+  const [postMagicNotice, setPostMagicNotice] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup' | 'forgot-password'>('signin')
   const [user, setUser] = useState<any>(null)
@@ -75,12 +76,11 @@ function AppContent() {
     const mode = urlParams.get('mode')
     const recoveryFlag = urlParams.get('recovery')
 
-    // Open user dashboard/profile directly after magic link sign-in
-    const openProfile = localStorage.getItem('pm_open_profile')
-    if (openProfile === '1') {
-      setIsAdminPanelOpen(true)
-      // clean up flag
-      localStorage.removeItem('pm_open_profile')
+    // After magic link, show a notice on the homepage instead of auto-opening dashboard
+    const postMagic = localStorage.getItem('pm_post_magic_popup')
+    if (postMagic === '1') {
+      setPostMagicNotice(true)
+      localStorage.removeItem('pm_post_magic_popup')
       window.history.replaceState({}, '', window.location.pathname)
     }
 
@@ -180,6 +180,32 @@ function AppContent() {
       <HowItWorks />
       <PropFirms propFirms={propFirms} onClaimCashback={handleClaimCashback} />
       <FAQ />
+      {postMagicNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <div className="max-w-md w-full p-6 rounded-2xl border" style={{ background: 'rgba(151, 86, 125, 0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)' }}>
+            <h3 className="typography-h4 mb-2" style={{ color: theme.textPrimary }}>Signed In</h3>
+            <p className="typography-body mb-4" style={{ color: theme.textSecondary }}>
+              You have been signed in via magic link. Open your dashboard to change your password from the Profile section.
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setPostMagicNotice(false)}
+                className="px-4 py-2 rounded-2xl typography-ui font-semibold"
+                style={{ background: 'rgba(151,86,125,0.05)', color: theme.textPrimary, border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => { setPostMagicNotice(false); setIsAdminPanelOpen(true) }}
+                className="px-4 py-2 rounded-2xl typography-ui font-semibold"
+                style={{ backgroundColor: theme.accent, color: theme.ctaText }}
+              >
+                Open Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Legal Footer Links */}
       <div className="px-4 sm:px-6 lg:px-8 mt-12 mb-10">
         <div 
