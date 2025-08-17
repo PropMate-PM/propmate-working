@@ -311,6 +311,7 @@ export class EmailService {
           if (!resp.ok || json.success === false) {
             throw new Error(json.error || `Email API error: ${resp.status}`)
           }
+        }
         } else {
           // Determine template type/category and data based on emailData.type
           let templateType = emailData.type
@@ -384,13 +385,14 @@ export class EmailService {
         const json = await resp.json().catch(() => ({}))
         if (!resp.ok || json.success === false) {
           throw new Error(json.error || `Email API error: ${resp.status}`)
-          }
         }
-      } else {
+        }
+      }
+      else {
         // Fallback mock in development when no backend email API is available
         console.log('📧 [Mock Email] No VITE_EMAIL_API_URL set. Logging email instead:', {
           to: emailData.to,
-          subject: emailData.subject,
+          subject: emailData.subject || '(no-subject)',
           type: emailData.type
         })
       }
@@ -399,8 +401,8 @@ export class EmailService {
       await logEmailCommunication(
         emailData.to,
         emailData.userId || null,
-        emailData.subject,
-        emailData.text.substring(0, 500), // First 500 chars for summary
+        emailData.subject || '(no-subject)',
+        (emailData.text || '').substring(0, 500), // First 500 chars for summary
         emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
         false
       )
@@ -411,9 +413,9 @@ export class EmailService {
         'email_sent',
         { 
           to: emailData.to, 
-          subject: emailData.subject, 
+          subject: emailData.subject || '(no-subject)', 
           type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
-          html_length: emailData.html.length,
+          html_length: emailData.html?.length ?? 0,
           ip: getUserIP(),
           ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
         }
