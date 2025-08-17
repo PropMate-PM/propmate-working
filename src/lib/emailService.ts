@@ -30,96 +30,7 @@ export interface EmailSendResult {
 
 
 
-// Email templates
-export const emailTemplates = {
-  welcome: (userName: string): EmailTemplate => ({
-    subject: 'Welcome to PropMate – Your Cashback Trading Partner',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #8B5A9F;">Welcome to PropMate – Your Cashback Trading Partner</h1>
-        <p>Hi ${userName},</p>
-        <p>Welcome to PropMate – the premier platform for prop firm cashback rewards.<br>
-        We're excited to have you onboard!</p>
-        
-        <h2>Here's how to get started in 3 quick steps:</h2>
-        <ol>
-          <li><strong>Browse Firms:</strong> Explore our curated list of leading prop trading firms.</li>
-          <li><strong>Use Our Links:</strong> Purchase through our referral links to qualify for cashback.</li>
-          <li><strong>Submit Proof:</strong> Upload your purchase receipt to claim your cashback.</li>
-        </ol>
-        
-        <p>💡 <strong>Tip:</strong> Always use our referral links to ensure your cashback is tracked correctly.</p>
-        
-        <p>We look forward to helping you maximize your trading benefits.<br>
-        Log in to your dashboard anytime to explore firms and manage requests.</p>
-        
-        <p>Happy trading,<br>
-        The PropMate Team</p>
-      </div>
-    `,
-    text: `Hi ${userName}, Welcome to PropMate – the premier platform for prop firm cashback rewards. We're excited to have you onboard! Here's how to get started: 1) Browse Firms: Explore our curated list of leading prop trading firms. 2) Use Our Links: Purchase through our referral links to qualify for cashback. 3) Submit Proof: Upload your purchase receipt to claim your cashback. Tip: Always use our referral links to ensure your cashback is tracked correctly. We look forward to helping you maximize your trading benefits. Log in to your dashboard anytime to explore firms and manage requests. Happy trading, The PropMate Team`
-  }),
-
-  statusChange: (userName: string, status: string, amount: number, firmName: string): EmailTemplate => ({
-    subject: `Cashback Request ${status.charAt(0).toUpperCase() + status.slice(1)} - PropMate`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #8B5A9F;">Cashback Request Update</h1>
-        <p>Hi ${userName},</p>
-        <p>Your cashback request for <strong>${firmName}</strong> has been <strong>${status}</strong>.</p>
-        ${status === 'paid' ? `
-          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #0369a1; margin-top: 0;">Payment Processed!</h2>
-            <p>Amount: <strong>$${amount.toFixed(2)}</strong></p>
-            <p>Your cashback has been sent to your crypto wallet. Please allow up to 24 hours for the transaction to appear in your wallet.</p>
-          </div>
-        ` : status === 'rejected' ? `
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #dc2626; margin-top: 0;">Request Rejected</h2>
-            <p>Unfortunately, we couldn't process your cashback request. This may be due to:</p>
-            <ul>
-              <li>Invalid proof of purchase</li>
-              <li>Purchase not made through our affiliate link</li>
-              <li>Duplicate submission</li>
-            </ul>
-            <p>Please contact support if you believe this was an error.</p>
-          </div>
-        ` : ''}
-        <p>You can view all your requests in your dashboard.</p>
-        <p>Best regards,<br>The PropMate Team</p>
-      </div>
-    `,
-            text: `Hi ${userName}, Your cashback request for ${firmName} has been ${status}. ${status === 'paid' ? `Amount: $${amount.toFixed(2)}. Your cashback has been sent to your crypto wallet.` : status === 'rejected' ? 'Unfortunately, we couldn\'t process your cashback request. Please contact support if you believe this was an error.' : ''} You can view all your requests in your dashboard. Best regards, The PropMate Team`
-  }),
-
-  confirmation: (userName: string, firmName: string, amount: number): EmailTemplate => ({
-    subject: 'Cashback Request Received – PropMate',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #8B5A9F;">Cashback Request Received – PropMate</h1>
-        <p>Hi ${userName},</p>
-        <p>We've received your cashback request for <strong>${firmName}</strong>.<br>
-        Our team is reviewing your submission and will update you shortly.</p>
-        
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="margin-top: 0;">Request Details:</h2>
-          <ul>
-            <li><strong>Prop Firm:</strong> ${firmName}</li>
-            <li><strong>Purchase Amount:</strong> $${amount.toFixed(2)}</li>
-            <li><strong>Estimated Cashback:</strong> $${(amount * 0.125).toFixed(2)}</li>
-            <li><strong>Status:</strong> Under Review</li>
-          </ul>
-        </div>
-        
-        <p>We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent.</p>
-        
-        <p>Thank you for choosing PropMate,<br>
-        The PropMate Team</p>
-      </div>
-    `,
-    text: `Hi ${userName}, We've received your cashback request for ${firmName}. Our team is reviewing your submission and will update you shortly. Request Details: Prop Firm: ${firmName}, Purchase Amount: $${amount.toFixed(2)}, Estimated Cashback: $${(amount * 0.125).toFixed(2)}, Status: Under Review. We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent. Thank you for choosing PropMate, The PropMate Team`
-  })
-}
+// All email templates now handled by Netlify Functions
 
 /**
  * Log email communication to database
@@ -177,15 +88,17 @@ export class EmailService {
         
         // Prefer explicit template payload if provided
         if (emailData.category && emailData.data) {
+          const payload = {
+            to: emailData.to,
+            category: emailData.category,
+            type: emailData.type,
+            data: emailData.data
+          }
+          console.log('🚀 [DEBUG] Sending structured email data to Netlify:', payload)
           const resp = await fetch(this.emailApiUrl, {
             method: 'POST',
             headers: authHeaders,
-            body: JSON.stringify({
-              to: emailData.to,
-              category: emailData.category,
-              type: emailData.type,
-              data: emailData.data
-            })
+            body: JSON.stringify(payload)
           })
           const json = await resp.json().catch(() => ({}))
           if (!resp.ok || json.success === false) {
@@ -321,13 +234,13 @@ export class EmailService {
   }
 
   async sendWelcomeEmail(userEmail: string, userName: string, userId?: string): Promise<EmailSendResult> {
-    const template = emailTemplates.welcome(userName)
     return this.sendEmail({
       to: userEmail,
-      subject: template.subject,
-      html: template.html,
-      text: template.text,
       type: 'welcome',
+      category: 'noreply',
+      data: {
+        name: userName
+      },
       userId
     })
   }
@@ -340,13 +253,16 @@ export class EmailService {
     firmName: string,
     userId?: string
   ): Promise<EmailSendResult> {
-    const template = emailTemplates.statusChange(userName, status, amount, firmName)
     return this.sendEmail({
       to: userEmail,
-      subject: template.subject,
-      html: template.html,
-      text: template.text,
-      type: 'status_change',
+      type: 'statusChange',
+      category: 'payments',
+      data: {
+        name: userName,
+        status: status,
+        cashbackAmount: amount,
+        propFirmName: firmName
+      },
       userId
     })
   }
