@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signing you in…</title>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; height:100vh; background:#0D0D0D; color:#fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif }
+    .box { text-align:center; padding:24px 28px; border-radius:24px; background: rgba(151,86,125,0.05); border:1px solid rgba(255,255,255,.1) }
+    .spinner { width:18px; height:18px; border:2px solid rgba(228,213,242,.3); border-top-color:#E4D5F2; border-radius:50%; animation:spin 1s linear infinite; display:inline-block; margin-right:8px }
+    @keyframes spin { to { transform: rotate(360deg) } }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    Completing sign-in…
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2'
+    const supabase = createClient('https://gwpbbzjqharvfuuxxuek.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cGJiempxaGFydmZ1dXh4dWVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MTUzMDcsImV4cCI6MjA2OTE5MTMwN30.LSxPfuzvXOhY_leqIGm7DG7Frw1FLu_acqK6dRQ1g_k')
+
+    const hash = new URLSearchParams(location.hash.slice(1))
+    const access_token = hash.get('access_token')
+    const refresh_token = hash.get('refresh_token')
+    const openProfile = new URLSearchParams(location.search).get('openProfile')
+
+    async function run() {
+      if (access_token) {
+        await supabase.auth.setSession({ access_token, refresh_token })
+      }
+      // Store a flag so SPA can open profile dialog
+      if (openProfile === '1') localStorage.setItem('pm_post_magic_popup', '1')
+      location.replace('/')
+    }
+    run()
+  </script>
+</body>
+</html>
+
+

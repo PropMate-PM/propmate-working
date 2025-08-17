@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { DollarSign, TrendingUp, Award, Target, Star, Gift } from 'lucide-react'
+import { DollarSign } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase, type CashbackSubmission } from '../lib/supabase'
 
@@ -20,16 +20,6 @@ interface SavingsData {
   savingsByFirm: { [key: string]: { discount: number; cashback: number; pendingCashback: number; requests: number; firmName: string } }
 }
 
-interface Achievement {
-  id: string
-  title: string
-  description: string
-  icon: React.ReactNode
-  threshold: number
-  achieved: boolean
-  progress: number
-}
-
 export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
   const { theme } = useTheme()
   const [savingsData, setSavingsData] = useState<SavingsData>({
@@ -45,7 +35,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
     savingsByFirm: {}
   })
   const [loading, setLoading] = useState(true)
-  const [achievements, setAchievements] = useState<Achievement[]>([])
+  
 
   useEffect(() => {
     if (user) {
@@ -77,10 +67,6 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
       // Calculate savings data
       const calculatedData = calculateSavingsData(submissions || [])
       setSavingsData(calculatedData)
-
-      // Calculate achievements
-      const userAchievements = calculateAchievements(calculatedData)
-      setAchievements(userAchievements)
 
       // Update user savings tracker in database
       await updateUserSavingsTracker(calculatedData)
@@ -150,67 +136,6 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
     data.totalSavings = data.totalCashbackEarned + data.totalPendingCashback
 
     return data
-  }
-
-  const calculateAchievements = (data: SavingsData): Achievement[] => {
-    const achievements: Achievement[] = [
-      {
-        id: 'first_request',
-        title: 'Getting Started',
-        description: 'Submit your first cashback request',
-        icon: <Star className="h-5 w-5" />,
-        threshold: 1,
-        achieved: data.totalRequests >= 1,
-        progress: Math.min(data.totalRequests, 1)
-      },
-      {
-        id: 'saver_100',
-        title: 'Smart Saver',
-        description: 'Earn $100 in total cashback (approved + pending)',
-        icon: <DollarSign className="h-5 w-5" />,
-        threshold: 100,
-        achieved: data.totalSavings >= 100,
-        progress: Math.min(data.totalSavings, 100)
-      },
-      {
-        id: 'saver_500',
-        title: 'Super Saver',
-        description: 'Earn $500 in total cashback (approved + pending)',
-        icon: <TrendingUp className="h-5 w-5" />,
-        threshold: 500,
-        achieved: data.totalSavings >= 500,
-        progress: Math.min(data.totalSavings, 500)
-      },
-      {
-        id: 'frequent_trader',
-        title: 'Frequent Trader',
-        description: 'Submit 5 cashback requests',
-        icon: <Target className="h-5 w-5" />,
-        threshold: 5,
-        achieved: data.totalRequests >= 5,
-        progress: Math.min(data.totalRequests, 5)
-      },
-      {
-        id: 'cashback_master',
-        title: 'Cashback Master',
-        description: 'Earn $200 in approved cashback',
-        icon: <Award className="h-5 w-5" />,
-        threshold: 200,
-        achieved: data.totalCashbackEarned >= 200,
-        progress: Math.min(data.totalCashbackEarned, 200)
-      },
-      {
-        id: 'diversified_trader',
-        title: 'Diversified Trader',
-        description: 'Trade with 3 different prop firms',
-        icon: <Gift className="h-5 w-5" />,
-        threshold: 3,
-        achieved: Object.keys(data.savingsByFirm).length >= 3,
-        progress: Math.min(Object.keys(data.savingsByFirm).length, 3)
-      }
-    ]
-
-    return achievements
   }
 
   const updateUserSavingsTracker = async (data: SavingsData) => {
@@ -307,91 +232,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
         </div>
       </div>
 
-      {/* Achievements */}
-      <div 
-        className="p-6 rounded-2xl border"
-        style={{
-          background: 'rgba(151, 86, 125, 0.05)',
-          border: '1.59809px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: 'inset 0px 6.39234px 6.39234px rgba(0, 0, 0, 0.25)',
-          backdropFilter: 'blur(31.9617px)',
-          borderRadius: '38.3541px'
-        }}
-      >
-        <h4 className="typography-h4 mb-4" style={{ color: theme.textPrimary }}>Achievements</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {achievements.map((achievement) => (
-            <div
-              key={achievement.id}
-              className={`p-4 rounded-xl border transition-all duration-200 ${
-                achievement.achieved ? 'hover:scale-105' : ''
-              }`}
-              style={{
-                background: achievement.achieved 
-                  ? `${theme.accent}10` 
-                  : 'rgba(151, 86, 125, 0.05)',
-                border: achievement.achieved 
-                  ? `1.59809px solid ${theme.accent}30` 
-                  : '1.59809px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '38.3541px',
-                opacity: achievement.achieved ? 1 : 0.7
-              }}
-            >
-              <div className="flex items-start space-x-3">
-                <div 
-                  className="p-2 rounded-lg flex-shrink-0"
-                  style={{ 
-                    backgroundColor: achievement.achieved 
-                      ? theme.accent 
-                      : `${theme.textSecondary}20`,
-                    color: achievement.achieved 
-                      ? theme.ctaText 
-                      : theme.textSecondary
-                  }}
-                >
-                  {achievement.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h5 className="typography-ui font-semibold" style={{ color: theme.textPrimary }}>
-                      {achievement.title}
-                    </h5>
-                    {achievement.achieved && (
-                      <div 
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: theme.accent }}
-                      />
-                    )}
-                  </div>
-                  <p className="typography-small mb-2" style={{ color: theme.textSecondary }}>
-                    {achievement.description}
-                  </p>
-                  
-                  {!achievement.achieved && (
-                    <div>
-                      <div 
-                        className="w-full h-2 rounded-full mb-1"
-                        style={{ backgroundColor: `${theme.textSecondary}20` }}
-                      >
-                        <div 
-                          className="h-2 rounded-full transition-all duration-300"
-                          style={{ 
-                            backgroundColor: theme.accent,
-                            width: `${(achievement.progress / achievement.threshold) * 100}%`
-                          }}
-                        />
-                      </div>
-                      <p className="typography-small" style={{ color: theme.textSecondary }}>
-                        {achievement.progress.toFixed(0)} / {achievement.threshold}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      
 
       {/* Savings by Prop Firm */}
       {Object.keys(savingsData.savingsByFirm).length > 0 && (
@@ -454,7 +295,7 @@ export default function UserSavingsTracker({ user }: UserSavingsTrackerProps) {
           </div>
           <h3 className="typography-h4 mb-2" style={{ color: theme.textPrimary }}>Start Saving Today</h3>
           <p className="typography-body mb-6" style={{ color: theme.textSecondary }}>
-            Submit your first cashback request to start tracking your savings and earning achievements.
+            Submit your first cashback request to start tracking your savings.
           </p>
         </div>
       )}

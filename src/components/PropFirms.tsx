@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ExternalLink, Gift, Star, TrendingUp, BarChart3, AlertTriangle, Search, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react'
+import { ExternalLink, Gift, Star, TrendingUp, BarChart3, AlertTriangle, Search, ArrowUp, ArrowDown, RotateCcw, Copy, Check } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import type { PropFirm } from '../lib/supabase'
 
@@ -15,6 +15,7 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
   const [showFirstTimeOnly, setShowFirstTimeOnly] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortState, setSortState] = useState<SortState>('default')
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   // Handle sort toggle cycling
   const handleSortToggle = () => {
@@ -95,6 +96,24 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
     }
   }
 
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = code
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    }
+  }
+
   const renderFirmCard = (firm: PropFirm) => (
     <div
       key={firm.id}
@@ -124,15 +143,51 @@ export default function PropFirms({ propFirms, onClaimCashback }: PropFirmsProps
           Get the highest discount from the website + cashback by purchasing from us.
         </p>
         
-        {/* Cashback Badge */}
-        <div 
-          className="inline-block px-3 py-1 rounded-full text-sm font-bold mb-4"
-          style={{ 
-            backgroundColor: '#ef4444',
-            color: 'white'
-          }}
-        >
-          {firm.cashback_percentage}% Cashback
+        {/* Cashback and Exclusive Discount Badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {/* Cashback Badge */}
+          <div 
+            className="inline-block px-3 py-1 rounded-full font-bold text-xs sm:text-sm"
+            style={{ 
+              backgroundColor: '#ef4444',
+              color: 'white'
+            }}
+          >
+            {firm.cashback_percentage}% Cashback
+          </div>
+
+          {/* Exclusive Discount Badge - only show if both fields are present */}
+          {firm.exclusive_discount_percent && firm.exclusive_coupon_code && (
+            <div 
+              className="inline-block px-3 py-1 rounded-full font-bold text-xs sm:text-sm"
+              style={{ 
+                backgroundColor: '#10b981',
+                color: 'white'
+              }}
+            >
+              Exclusive Discount: {firm.exclusive_discount_percent}%
+            </div>
+          )}
+
+          {/* Coupon Code Badge - only show if both fields are present */}
+          {firm.exclusive_discount_percent && firm.exclusive_coupon_code && (
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full font-bold cursor-pointer transition-all duration-200 hover:scale-105 min-w-0 text-xs sm:text-sm"
+              style={{ 
+                backgroundColor: '#f59e0b',
+                color: 'white'
+              }}
+              onClick={() => handleCopyCode(firm.exclusive_coupon_code!)}
+              title="Click to copy coupon code"
+            >
+              <span className="truncate">Coupon Code: {firm.exclusive_coupon_code}</span>
+              {copiedCode === firm.exclusive_coupon_code ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

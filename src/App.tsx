@@ -13,6 +13,27 @@ import { supabase, type PropFirm } from './lib/supabase'
 import { onAuthStateChange, signOut } from './lib/auth'
 import CookieConsent from './components/CookieConsent'
 
+// Cookie helpers to persist consent robustly across reloads (and optionally subdomains)
+function getCookie(name: string): string | null {
+  try {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'))
+    return match ? decodeURIComponent(match[1]) : null
+  } catch {
+    return null
+  }
+}
+
+function setCookie(name: string, value: string, days: number): void {
+  try {
+    const expires = new Date()
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
+    // Use path=/ for all routes. Omit domain to avoid misconfiguration across environments.
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; samesite=lax`
+  } catch {
+    // no-op
+  }
+}
+
 function AppContent() {
   const [propFirms, setPropFirms] = useState<PropFirm[]>([])
   const [selectedPropFirm, setSelectedPropFirm] = useState<PropFirm | null>(null)
@@ -24,15 +45,19 @@ function AppContent() {
   const [user, setUser] = useState<any>(null)
   const [showCookie, setShowCookie] = useState<boolean>(() => {
     try {
-      const v = localStorage.getItem('cookie_consent')
-      return v !== 'accepted' && v !== 'declined'
-    } catch { return true }
+      const cookieVal = typeof document !== 'undefined' ? getCookie('cookie_consent') : null
+      const storedVal = localStorage.getItem('cookie_consent')
+      const val = cookieVal || storedVal
+      return val !== 'accepted' && val !== 'declined'
+    } catch {
+      return true
+    }
   })
 
   // Analytics & Sentry loaders gated by consent
   useEffect(() => {
     try {
-      const val = localStorage.getItem('cookie_consent')
+      const val = getCookie('cookie_consent') || localStorage.getItem('cookie_consent')
       if (val === 'accepted') {
         const gaId = import.meta.env.VITE_GA_ID
         if (gaId) {
@@ -291,8 +316,20 @@ function AppContent() {
 
       <CookieConsent
         isVisible={showCookie}
-        onAccept={() => { try { localStorage.setItem('cookie_consent','accepted') } catch {}; setShowCookie(false) }}
-        onDecline={() => { try { localStorage.setItem('cookie_consent','declined') } catch {}; setShowCookie(false) }}
+        onAccept={() => {
+          try {
+            setCookie('cookie_consent', 'accepted', 365)
+            localStorage.setItem('cookie_consent', 'accepted')
+          } catch {}
+          setShowCookie(false)
+        }}
+        onDecline={() => {
+          try {
+            setCookie('cookie_consent', 'declined', 365)
+            localStorage.setItem('cookie_consent', 'declined')
+          } catch {}
+          setShowCookie(false)
+        }}
       />
     </div>
   )

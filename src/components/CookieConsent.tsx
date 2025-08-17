@@ -64,3 +64,10 @@ export default function CookieConsent({ isVisible, onAccept, onDecline }: Cookie
 }
 
 
+
+
+
+
+
+
+

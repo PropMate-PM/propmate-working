@@ -23,6 +23,8 @@ export interface PropFirm {
   created_at: string
   category: 'futures' | 'forex'
   is_first_time_offer: boolean
+  exclusive_discount_percent?: number
+  exclusive_coupon_code?: string
 }
 
 export interface CashbackSubmission {
