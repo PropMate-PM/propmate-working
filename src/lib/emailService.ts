@@ -299,6 +299,19 @@ export class EmailService {
         if (emailData.type === 'welcome') {
           templateType = 'welcome'
           templateData = { name: emailData.to.split('@')[0] } // Extract name from email
+        } else if (emailData.type === 'cashbackRequest') {
+          templateType = 'cashbackRequest'
+          // Extract data from the subject or text content
+          const text = emailData.text
+          const firmMatch = text.match(/Prop Firm: ([^,]+)/)
+          const amountMatch = text.match(/Purchase Amount: \$(\d+\.?\d*)/)
+          const firmName = firmMatch ? firmMatch[1].trim() : 'Prop Firm'
+          const amount = amountMatch ? parseFloat(amountMatch[1]) : 0
+          templateData = {
+            userName: emailData.to.split('@')[0],
+            firmName: firmName,
+            amount: amount
+          }
         } else if (emailData.type === 'status_change') {
           // Extract data from the subject or text content
           if (emailData.subject.includes('Payment Sent')) {
@@ -427,13 +440,32 @@ export class EmailService {
     amount: number,
     userId?: string
   ): Promise<EmailSendResult> {
-    const template = emailTemplates.confirmation(userName, firmName, amount)
     return this.sendEmail({
       to: userEmail,
-      subject: template.subject,
-      html: template.html,
-      text: template.text,
-      type: 'status_change',
+      subject: 'Cashback Request Received – PropMate',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <h2 style="color: #8B5A9F; margin-bottom: 20px;">Cashback Request Received – PropMate</h2>
+          <p>Hi ${userName},</p>
+          <p>We've received your cashback request for <strong>${firmName}</strong>.<br>
+          Our team is reviewing your submission and will update you shortly.</p>
+          
+          <h3>Request Details:</h3>
+          <ul>
+            <li><strong>Prop Firm:</strong> ${firmName}</li>
+            <li><strong>Purchase Amount:</strong> $${amount.toFixed(2)}</li>
+            <li><strong>Estimated Cashback:</strong> $${(amount * 0.125).toFixed(2)}</li>
+            <li><strong>Status:</strong> Under Review</li>
+          </ul>
+          
+          <p>We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent.</p>
+          
+          <p>Thank you for choosing PropMate,<br>
+          The PropMate Team</p>
+        </div>
+      `,
+      text: `Hi ${userName}, We've received your cashback request for ${firmName}. Our team is reviewing your submission and will update you shortly. Request Details: Prop Firm: ${firmName}, Purchase Amount: $${amount.toFixed(2)}, Estimated Cashback: $${(amount * 0.125).toFixed(2)}, Status: Under Review. We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent. Thank you for choosing PropMate, The PropMate Team`,
+      type: 'cashbackRequest',
       userId
     })
   }
