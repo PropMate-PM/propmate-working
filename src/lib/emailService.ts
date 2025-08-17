@@ -12,11 +12,14 @@ export interface EmailTemplate {
 
 export interface EmailData {
   to: string
-  subject: string
-  html: string
-  text: string
-  type: 'welcome' | 'status_change' | 'manual' | 'broadcast' | 'paymentSent' | 'statusChange' | 'cashbackRequest'
+  subject?: string
+  html?: string
+  text?: string
+  type: 'welcome' | 'status_change' | 'manual' | 'broadcast' | 'paymentSent' | 'statusChange' | 'cashbackRequest' | 'payoutProcessing'
   userId?: string
+  // Optional direct template payload for Netlify
+  category?: 'noreply' | 'legal' | 'support' | 'admin' | 'payments'
+  data?: Record<string, unknown>
 }
 
 export interface EmailSendResult {
@@ -292,10 +295,27 @@ export class EmailService {
           authHeaders['apikey'] = anonKey
         }
         
-        // Determine template type/category and data based on emailData.type
-        let templateType = emailData.type
-        let templateCategory: 'noreply' | 'legal' | 'support' | 'admin' | 'payments' = 'noreply'
-        let templateData: any = {}
+        // Prefer explicit template payload if provided
+        if (emailData.category && emailData.data) {
+        const resp = await fetch(this.emailApiUrl, {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify({
+            to: emailData.to,
+              category: emailData.category,
+              type: emailData.type,
+              data: emailData.data
+            })
+          })
+          const json = await resp.json().catch(() => ({}))
+          if (!resp.ok || json.success === false) {
+            throw new Error(json.error || `Email API error: ${resp.status}`)
+          }
+        } else {
+          // Determine template type/category and data based on emailData.type
+          let templateType = emailData.type
+          let templateCategory: 'noreply' | 'legal' | 'support' | 'admin' | 'payments' = 'noreply'
+          let templateData: any = {}
         
         if (emailData.type === 'welcome') {
           templateType = 'welcome'
@@ -351,21 +371,20 @@ export class EmailService {
               cashbackAmount: 0
             }
           }
-        }
-        
-        const resp = await fetch(this.emailApiUrl, {
-          method: 'POST',
-          headers: authHeaders,
-          body: JSON.stringify({
-            to: emailData.to,
-            category: templateCategory,
-            type: templateType,
-            data: templateData
+          const resp = await fetch(this.emailApiUrl, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+              to: emailData.to,
+              category: templateCategory,
+              type: templateType,
+              data: templateData
           })
         })
         const json = await resp.json().catch(() => ({}))
         if (!resp.ok || json.success === false) {
           throw new Error(json.error || `Email API error: ${resp.status}`)
+          }
         }
       } else {
         // Fallback mock in development when no backend email API is available
@@ -459,30 +478,14 @@ export class EmailService {
   ): Promise<EmailSendResult> {
     return this.sendEmail({
       to: userEmail,
-      subject: 'Cashback Request Received – PropMate',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-          <h2 style="color: #8B5A9F; margin-bottom: 20px;">Cashback Request Received – PropMate</h2>
-          <p>Hi ${userName},</p>
-          <p>We've received your cashback request for <strong>${firmName}</strong>.<br>
-          Our team is reviewing your submission and will update you shortly.</p>
-          
-          <h3>Request Details:</h3>
-          <ul>
-            <li><strong>Prop Firm:</strong> ${firmName}</li>
-            <li><strong>Purchase Amount:</strong> $${amount.toFixed(2)}</li>
-            <li><strong>Estimated Cashback:</strong> $${(amount * 0.125).toFixed(2)}</li>
-            <li><strong>Status:</strong> Under Review</li>
-          </ul>
-          
-          <p>We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent.</p>
-          
-          <p>Thank you for choosing PropMate,<br>
-          The PropMate Team</p>
-        </div>
-      `,
-      text: `Hi ${userName}, We've received your cashback request for ${firmName}. Our team is reviewing your submission and will update you shortly. Request Details: Prop Firm: ${firmName}, Purchase Amount: $${amount.toFixed(2)}, Estimated Cashback: $${(amount * 0.125).toFixed(2)}, Status: Under Review. We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent. Thank you for choosing PropMate, The PropMate Team`,
       type: 'cashbackRequest',
+      category: 'payments',
+      data: {
+        name: userName,
+        propFirmName: firmName,
+        purchaseAmount: Number(amount.toFixed(2)),
+        cashbackAmount: Number((amount * 0.125).toFixed(2))
+      },
       userId
     })
   }
@@ -555,22 +558,22 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <h2 style="color: #8B5A9F; margin-bottom: 20px;">Cashback Request Approved!</h2>
-          <p>Great news! Your cashback request has been approved and is ready for payment.</p>
-          
+      <p>Great news! Your cashback request has been approved and is ready for payment.</p>
+      
           <h3>Approved Cashback:</h3>
-          <ul>
-            <li><strong>Prop Firm:</strong> ${requestDetails.firmName}</li>
-            <li><strong>Purchase Amount:</strong> $${requestDetails.purchaseAmount.toFixed(2)}</li>
-            <li><strong>Cashback Amount:</strong> $${requestDetails.cashbackAmount.toFixed(2)}</li>
-            <li><strong>Wallet Address:</strong> ${requestDetails.walletAddress.substring(0, 10)}...${requestDetails.walletAddress.substring(requestDetails.walletAddress.length - 10)}</li>
-          </ul>
-          
+        <ul>
+          <li><strong>Prop Firm:</strong> ${requestDetails.firmName}</li>
+          <li><strong>Purchase Amount:</strong> $${requestDetails.purchaseAmount.toFixed(2)}</li>
+          <li><strong>Cashback Amount:</strong> $${requestDetails.cashbackAmount.toFixed(2)}</li>
+          <li><strong>Wallet Address:</strong> ${requestDetails.walletAddress.substring(0, 10)}...${requestDetails.walletAddress.substring(requestDetails.walletAddress.length - 10)}</li>
+        </ul>
+      
           <h3>Payment Process:</h3>
-          <p>Your cashback will be processed within 1-2 business days. You'll receive another email with the transaction hash once the payment is sent.</p>
-          
-          <p><strong>Payment Method:</strong> Cryptocurrency transfer to your provided wallet address</p>
-          
-          <p>Thank you for choosing PropMate for your cashback needs!</p>
+      <p>Your cashback will be processed within 1-2 business days. You'll receive another email with the transaction hash once the payment is sent.</p>
+      
+        <p><strong>Payment Method:</strong> Cryptocurrency transfer to your provided wallet address</p>
+      
+      <p>Thank you for choosing PropMate for your cashback needs!</p>
         </div>
       `,
       text: `Cashback approved! ${requestDetails.firmName} - $${requestDetails.cashbackAmount.toFixed(2)} will be sent to your wallet within 1-2 business days.`,
@@ -603,10 +606,10 @@ export class EmailService {
           <h3>Payment Details:</h3>
           <ul>
             <li><strong>Amount Sent:</strong> $${paymentDetails.amount.toFixed(2)}</li>
-            <li><strong>Prop Firm:</strong> ${paymentDetails.firmName}</li>
-            <li><strong>Wallet Address:</strong> ${paymentDetails.walletAddress}</li>
+          <li><strong>Prop Firm:</strong> ${paymentDetails.firmName}</li>
+          <li><strong>Wallet Address:</strong> ${paymentDetails.walletAddress}</li>
             <li><strong>Transaction Hash:</strong> ${paymentDetails.transactionHash}</li>
-          </ul>
+        </ul>
           
           <p>🔎 <strong>Verify Transaction:</strong><br>
           You can verify this transaction on the blockchain using the transaction hash above. Depending on network congestion, it may take a few minutes to appear.</p>
