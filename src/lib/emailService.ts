@@ -292,14 +292,16 @@ export class EmailService {
           authHeaders['apikey'] = anonKey
         }
         
-        // Determine template type and data based on emailData.type
+        // Determine template type/category and data based on emailData.type
         let templateType = emailData.type
+        let templateCategory: 'noreply' | 'legal' | 'support' | 'admin' | 'payments' = 'noreply'
         let templateData: any = {}
         
         if (emailData.type === 'welcome') {
           templateType = 'welcome'
           templateData = { name: emailData.to.split('@')[0] } // Extract name from email
         } else if (emailData.type === 'cashbackRequest') {
+          templateCategory = 'payments'
           templateType = 'cashbackRequest'
           // Extract data from the subject or text content
           const text = emailData.text
@@ -313,6 +315,7 @@ export class EmailService {
             amount: amount
           }
         } else if (emailData.type === 'status_change') {
+          templateCategory = 'payments'
           // Extract data from the subject or text content
           if (emailData.subject.includes('Payment Sent')) {
             templateType = 'paymentSent'
@@ -342,6 +345,7 @@ export class EmailService {
           headers: authHeaders,
           body: JSON.stringify({
             to: emailData.to,
+            category: templateCategory,
             type: templateType,
             data: templateData
           })
