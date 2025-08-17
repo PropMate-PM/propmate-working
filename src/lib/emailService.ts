@@ -28,13 +28,7 @@ export interface EmailSendResult {
   error?: string
 }
 
-// Email configuration
-const EMAIL_CONFIG = {
-  FROM_EMAIL: 'noreply@propmate.com',
-  FROM_NAME: 'PropMate',
-  SUPPORT_EMAIL: 'support@propmate.com',
-  ADMIN_EMAIL: 'admin@propmate.site'
-}
+
 
 // Email templates
 export const emailTemplates = {
@@ -155,121 +149,7 @@ const logEmailCommunication = async (
   }
 }
 
-/**
- * Generate enhanced email template with consistent branding
- */
-const generateEmailTemplate = (
-  title: string,
-  content: string,
-  ctaText?: string,
-  ctaUrl?: string,
-  footerText?: string
-): string => {
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${title}</title>
-      <style>
-        body { 
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-          line-height: 1.6; 
-          color: #333; 
-          max-width: 600px; 
-          margin: 0 auto; 
-          padding: 20px; 
-          background-color: #f8f9fa;
-        }
-        .container {
-          background: white;
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .header { 
-          background: linear-gradient(135deg, #8B5A9F 0%, #6B46C1 100%); 
-          color: white; 
-          padding: 30px 20px; 
-          text-align: center; 
-        }
-        .content { 
-          padding: 30px 20px; 
-        }
-        .footer { 
-          background: #f8f9fa; 
-          padding: 20px; 
-          text-align: center; 
-          font-size: 14px; 
-          color: #6c757d; 
-          border-top: 1px solid #e9ecef;
-        }
-        .cta-button { 
-          display: inline-block; 
-          background: #28a745; 
-          color: white; 
-          padding: 12px 24px; 
-          text-decoration: none; 
-          border-radius: 6px; 
-          font-weight: bold; 
-          margin: 20px 0; 
-        }
-        .highlight { 
-          background: #e3f2fd; 
-          padding: 15px; 
-          border-left: 4px solid #2196f3; 
-          margin: 20px 0; 
-          border-radius: 4px;
-        }
-        .warning { 
-          background: #fff3cd; 
-          padding: 15px; 
-          border-left: 4px solid #ffc107; 
-          margin: 20px 0; 
-          border-radius: 4px;
-        }
-        .success { 
-          background: #d4edda; 
-          padding: 15px; 
-          border-left: 4px solid #28a745; 
-          margin: 20px 0; 
-          border-radius: 4px;
-        }
-        .error { 
-          background: #f8d7da; 
-          padding: 15px; 
-          border-left: 4px solid #dc3545; 
-          margin: 20px 0; 
-          border-radius: 4px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1 style="margin: 0; font-size: 28px;">PropMate</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your Cashback Trading Partner</p>
-        </div>
-        <div class="content">
-          ${content}
-          ${ctaText && ctaUrl ? `<div style="text-align: center;"><a href="${ctaUrl}" class="cta-button">${ctaText}</a></div>` : ''}
-        </div>
-        <div class="footer">
-          <p>${footerText || 'Thank you for choosing PropMate for your trading cashback needs.'}</p>
-          <p>
-            <a href="mailto:${EMAIL_CONFIG.SUPPORT_EMAIL}" style="color: #6c757d;">Contact Support</a> | 
-            <a href="#" style="color: #6c757d;">Unsubscribe</a>
-          </p>
-          <p style="font-size: 12px; margin-top: 15px;">
-            © ${new Date().getFullYear()} PropMate. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
-}
+
 
 // Enhanced email service - in production, this would integrate with SendGrid, AWS SES, etc.
 export class EmailService {
@@ -297,11 +177,11 @@ export class EmailService {
         
         // Prefer explicit template payload if provided
         if (emailData.category && emailData.data) {
-        const resp = await fetch(this.emailApiUrl, {
-          method: 'POST',
-          headers: authHeaders,
-          body: JSON.stringify({
-            to: emailData.to,
+          const resp = await fetch(this.emailApiUrl, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+              to: emailData.to,
               category: emailData.category,
               type: emailData.type,
               data: emailData.data
@@ -311,67 +191,68 @@ export class EmailService {
           if (!resp.ok || json.success === false) {
             throw new Error(json.error || `Email API error: ${resp.status}`)
           }
-        }
         } else {
           // Determine template type/category and data based on emailData.type
           let templateType = emailData.type
           let templateCategory: 'noreply' | 'legal' | 'support' | 'admin' | 'payments' = 'noreply'
           let templateData: any = {}
         
-        if (emailData.type === 'welcome') {
-          templateType = 'welcome'
-          templateData = { name: emailData.to.split('@')[0] } // Extract name from email
-        } else if (emailData.type === 'cashbackRequest') {
-          templateCategory = 'payments'
-          templateType = 'cashbackRequest'
-          // Extract data from the provided plain-text body
-          const text = emailData.text
-          const nameMatch = text.match(/Hi\s+([^,]+),/)
-          const firmMatch = text.match(/Prop Firm:\s*([^,\n]+)/)
-          const amountMatch = text.match(/Purchase Amount:\s*\$(\d+\.?\d*)/)
-          const userName = nameMatch ? nameMatch[1].trim() : emailData.to.split('@')[0]
-          const firmName = firmMatch ? firmMatch[1].trim() : 'Prop Firm'
-          const purchaseAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
-          const cashbackAmount = Number.isFinite(purchaseAmount) ? +(purchaseAmount * 0.125).toFixed(2) : 0
-          templateData = {
-            name: userName,
-            propFirmName: firmName,
-            purchaseAmount,
-            cashbackAmount
-          }
-        } else if (emailData.type === 'status_change') {
-          templateCategory = 'payments'
-          // Extract data from the subject or text content
-          if (emailData.subject.includes('Payment Sent')) {
-            templateType = 'payoutProcessing'
-            // Parse payment details from text content
-            const text = emailData.text
+          if (emailData.type === 'welcome') {
+            templateType = 'welcome'
+            templateData = { name: emailData.to.split('@')[0] } // Extract name from email
+          } else if (emailData.type === 'cashbackRequest') {
+            templateCategory = 'payments'
+            templateType = 'cashbackRequest'
+            // Extract data from the provided plain-text body
+            const text = emailData.text || ''
             const nameMatch = text.match(/Hi\s+([^,]+),/)
-            const amountMatch = text.match(/Amount Sent:\s*\$(\d+\.?\d*)/)
-            const walletMatch = text.match(/Wallet Address:\s*([^\n]+)/)
-            const txMatch = text.match(/Transaction Hash:\s*([^\n]+)/)
+            const firmMatch = text.match(/Prop Firm:\s*([^,\n]+)/)
+            const amountMatch = text.match(/Purchase Amount:\s*\$(\d+\.?\d*)/)
             const userName = nameMatch ? nameMatch[1].trim() : emailData.to.split('@')[0]
-            const cashbackAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
-            const walletAddress = walletMatch ? walletMatch[1].trim() : 'User Wallet'
-            const transactionHash = txMatch ? txMatch[1].trim() : 'Transaction Hash'
+            const firmName = firmMatch ? firmMatch[1].trim() : 'Prop Firm'
+            const purchaseAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
+            const cashbackAmount = Number.isFinite(purchaseAmount) ? +(purchaseAmount * 0.125).toFixed(2) : 0
             templateData = {
               name: userName,
-              cashbackAmount,
-              purchaseAmount: cashbackAmount,
-              propFirmName: 'Cashback',
-              walletAddress,
-              transactionHash
+              propFirmName: firmName,
+              purchaseAmount,
+              cashbackAmount
             }
-          } else {
-            // Default to a generic status-change style via payments category if needed
-            templateType = 'cashbackRequest'
-            templateData = {
-              name: emailData.to.split('@')[0],
-              propFirmName: 'Prop Firm',
-              purchaseAmount: 0,
-              cashbackAmount: 0
+          } else if (emailData.type === 'status_change') {
+            templateCategory = 'payments'
+            // Extract data from the subject or text content
+            if (emailData.subject?.includes('Payment Sent')) {
+              templateType = 'payoutProcessing'
+              // Parse payment details from text content
+              const text = emailData.text || ''
+              const nameMatch = text.match(/Hi\s+([^,]+),/)
+              const amountMatch = text.match(/Amount Sent:\s*\$(\d+\.?\d*)/)
+              const walletMatch = text.match(/Wallet Address:\s*([^\n]+)/)
+              const txMatch = text.match(/Transaction Hash:\s*([^\n]+)/)
+              const userName = nameMatch ? nameMatch[1].trim() : emailData.to.split('@')[0]
+              const cashbackAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
+              const walletAddress = walletMatch ? walletMatch[1].trim() : 'User Wallet'
+              const transactionHash = txMatch ? txMatch[1].trim() : 'Transaction Hash'
+              templateData = {
+                name: userName,
+                cashbackAmount,
+                purchaseAmount: cashbackAmount,
+                propFirmName: 'Cashback',
+                walletAddress,
+                transactionHash
+              }
+            } else {
+              // Default to a generic status-change style via payments category if needed
+              templateType = 'cashbackRequest'
+              templateData = {
+                name: emailData.to.split('@')[0],
+                propFirmName: 'Prop Firm',
+                purchaseAmount: 0,
+                cashbackAmount: 0
+              }
             }
           }
+          
           const resp = await fetch(this.emailApiUrl, {
             method: 'POST',
             headers: authHeaders,
@@ -380,15 +261,14 @@ export class EmailService {
               category: templateCategory,
               type: templateType,
               data: templateData
+            })
           })
-        })
-        const json = await resp.json().catch(() => ({}))
-        if (!resp.ok || json.success === false) {
-          throw new Error(json.error || `Email API error: ${resp.status}`)
+          const json = await resp.json().catch(() => ({}))
+          if (!resp.ok || json.success === false) {
+            throw new Error(json.error || `Email API error: ${resp.status}`)
+          }
         }
-        }
-      }
-      else {
+      } else {
         // Fallback mock in development when no backend email API is available
         console.log('📧 [Mock Email] No VITE_EMAIL_API_URL set. Logging email instead:', {
           to: emailData.to,
@@ -403,7 +283,7 @@ export class EmailService {
         emailData.userId || null,
         emailData.subject || '(no-subject)',
         (emailData.text || '').substring(0, 500), // First 500 chars for summary
-        emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
+        emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' || emailData.type === 'payoutProcessing' ? 'status_change' : emailData.type,
         false
       )
       
@@ -414,7 +294,7 @@ export class EmailService {
         { 
           to: emailData.to, 
           subject: emailData.subject || '(no-subject)', 
-          type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
+          type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' || emailData.type === 'payoutProcessing' ? 'status_change' : emailData.type,
           html_length: emailData.html?.length ?? 0,
           ip: getUserIP(),
           ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
