@@ -15,7 +15,7 @@ export interface EmailData {
   subject: string
   html: string
   text: string
-  type: 'welcome' | 'status_change' | 'manual' | 'broadcast'
+  type: 'welcome' | 'status_change' | 'manual' | 'broadcast' | 'paymentSent' | 'statusChange'
   userId?: string
 }
 
@@ -291,15 +291,47 @@ export class EmailService {
           authHeaders['Authorization'] = `Bearer ${anonKey}`
           authHeaders['apikey'] = anonKey
         }
+        
+        // Determine template type and data based on emailData.type
+        let templateType = emailData.type
+        let templateData: any = {}
+        
+        if (emailData.type === 'welcome') {
+          templateType = 'welcome'
+          templateData = { name: emailData.to.split('@')[0] } // Extract name from email
+        } else if (emailData.type === 'status_change') {
+          // Extract data from the subject or text content
+          if (emailData.subject.includes('Payment Sent')) {
+            templateType = 'paymentSent'
+            // Parse payment details from text content
+            const text = emailData.text
+            const amountMatch = text.match(/\$(\d+\.?\d*)/)
+            const amount = amountMatch ? parseFloat(amountMatch[1]) : 0
+            templateData = {
+              userName: emailData.to.split('@')[0],
+              amount: amount,
+              firmName: 'Cashback',
+              walletAddress: 'User Wallet',
+              transactionHash: 'Transaction Hash'
+            }
+          } else {
+            templateType = 'statusChange'
+            templateData = {
+              userName: emailData.to.split('@')[0],
+              status: 'approved',
+              amount: 0,
+              firmName: 'Prop Firm'
+            }
+          }
+        }
+        
         const resp = await fetch(this.emailApiUrl, {
           method: 'POST',
           headers: authHeaders,
           body: JSON.stringify({
             to: emailData.to,
-            subject: emailData.subject,
-            html: emailData.html,
-            text: emailData.text,
-            type: emailData.type
+            type: templateType,
+            data: templateData
           })
         })
         const json = await resp.json().catch(() => ({}))
@@ -321,7 +353,7 @@ export class EmailService {
         emailData.userId || null,
         emailData.subject,
         emailData.text.substring(0, 500), // First 500 chars for summary
-        emailData.type,
+        emailData.type === 'paymentSent' || emailData.type === 'statusChange' ? 'status_change' : emailData.type,
         false
       )
       
@@ -332,7 +364,7 @@ export class EmailService {
         { 
           to: emailData.to, 
           subject: emailData.subject, 
-          type: emailData.type,
+          type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' ? 'status_change' : emailData.type,
           html_length: emailData.html.length,
           ip: getUserIP(),
           ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'server'

@@ -4,7 +4,6 @@ export type EmailCategory = 'legal' | 'noreply' | 'support' | 'admin' | 'payment
 
 export interface SendEmailRequest {
   to: string | string[]
-  category?: EmailCategory
   type?: string
   data?: Record<string, unknown>
   subject?: string
@@ -39,41 +38,41 @@ export async function sendEmail(req: SendEmailRequest, endpoint: string = DEFAUL
 
 // Convenience helpers
 export const Email = {
-  welcome: (to: string, name?: string) => sendEmail({ to, category: 'noreply', type: 'welcome', data: { name } }),
+  welcome: (to: string, name?: string) => sendEmail({ to, type: 'welcome', data: { name } }),
   verifyEmail: (to: string, name: string | undefined, code: string, verifyUrl?: string) =>
-    sendEmail({ to, category: 'noreply', type: 'verifyEmail', data: { name, code, verifyUrl } }),
+    sendEmail({ to, type: 'verifyEmail', data: { name, code, verifyUrl } }),
   resetPassword: (to: string, name: string | undefined, resetUrl?: string) =>
-    sendEmail({ to, category: 'noreply', type: 'resetPassword', data: { name, resetUrl } }),
+    sendEmail({ to, type: 'resetPassword', data: { name, resetUrl } }),
   accountActivated: (to: string, name?: string) =>
-    sendEmail({ to, category: 'noreply', type: 'accountActivated', data: { name } }),
+    sendEmail({ to, type: 'accountActivated', data: { name } }),
 
   legalTermsUpdate: (to: string, version: string, effectiveDate: string) =>
-    sendEmail({ to, category: 'legal', type: 'termsUpdate', data: { version, effectiveDate } }),
+    sendEmail({ to, type: 'termsUpdate', data: { version, effectiveDate } }),
   legalPrivacyUpdate: (to: string, version: string, effectiveDate: string) =>
-    sendEmail({ to, category: 'legal', type: 'privacyUpdate', data: { version, effectiveDate } }),
+    sendEmail({ to, type: 'privacyUpdate', data: { version, effectiveDate } }),
   legalCompliance: (to: string, summary: string) =>
-    sendEmail({ to, category: 'legal', type: 'complianceNotice', data: { summary } }),
+    sendEmail({ to, type: 'complianceNotice', data: { summary } }),
 
   supportReply: (to: string, ticketId: string, message: string) =>
-    sendEmail({ to, category: 'support', type: 'supportReply', data: { ticketId, message } }),
+    sendEmail({ to, type: 'supportReply', data: { ticketId, message } }),
   accountHelp: (to: string, message: string) =>
-    sendEmail({ to, category: 'support', type: 'accountHelp', data: { message } }),
+    sendEmail({ to, type: 'accountHelp', data: { message } }),
 
   adminNewUser: (to: string, userEmail: string, count: number) =>
-    sendEmail({ to, category: 'admin', type: 'newUser', data: { userEmail, count } }),
+    sendEmail({ to, type: 'newUser', data: { userEmail, count } }),
   adminAlert: (to: string, level: 'info' | 'warn' | 'error', message: string) =>
-    sendEmail({ to, category: 'admin', type: 'systemAlert', data: { level, message } }),
+    sendEmail({ to, type: 'systemAlert', data: { level, message } }),
   adminStats: (to: string, period: string, stats: Record<string, number>) =>
-    sendEmail({ to, category: 'admin', type: 'statsSummary', data: { period, stats } }),
+    sendEmail({ to, type: 'statsSummary', data: { period, stats } }),
 
   paymentCashback: (to: string, amount: number, firm: string) =>
-    sendEmail({ to, category: 'payments', type: 'cashbackEarned', data: { amount, firm } }),
+    sendEmail({ to, type: 'cashbackEarned', data: { amount, firm } }),
   paymentProcessing: (to: string, amount: number, method: string) =>
-    sendEmail({ to, category: 'payments', type: 'payoutProcessing', data: { amount, method } }),
+    sendEmail({ to, type: 'statusChange', data: { status: 'paid', amount, firmName: 'Cashback' } }),
   paymentMethodUpdated: (to: string, method: string) =>
-    sendEmail({ to, category: 'payments', type: 'paymentMethodUpdate', data: { method } }),
+    sendEmail({ to, type: 'paymentMethodUpdate', data: { method } }),
   monthlySummary: (to: string, month: string, totals: { cashback: number; payouts: number }) =>
-    sendEmail({ to, category: 'payments', type: 'monthlySummary', data: { month, totals } })
+    sendEmail({ to, type: 'monthlySummary', data: { month, totals } })
 }
 
 
