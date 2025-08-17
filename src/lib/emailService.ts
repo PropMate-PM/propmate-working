@@ -303,39 +303,52 @@ export class EmailService {
         } else if (emailData.type === 'cashbackRequest') {
           templateCategory = 'payments'
           templateType = 'cashbackRequest'
-          // Extract data from the subject or text content
+          // Extract data from the provided plain-text body
           const text = emailData.text
-          const firmMatch = text.match(/Prop Firm: ([^,]+)/)
-          const amountMatch = text.match(/Purchase Amount: \$(\d+\.?\d*)/)
+          const nameMatch = text.match(/Hi\s+([^,]+),/)
+          const firmMatch = text.match(/Prop Firm:\s*([^,\n]+)/)
+          const amountMatch = text.match(/Purchase Amount:\s*\$(\d+\.?\d*)/)
+          const userName = nameMatch ? nameMatch[1].trim() : emailData.to.split('@')[0]
           const firmName = firmMatch ? firmMatch[1].trim() : 'Prop Firm'
-          const amount = amountMatch ? parseFloat(amountMatch[1]) : 0
+          const purchaseAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
+          const cashbackAmount = Number.isFinite(purchaseAmount) ? +(purchaseAmount * 0.125).toFixed(2) : 0
           templateData = {
-            userName: emailData.to.split('@')[0],
-            firmName: firmName,
-            amount: amount
+            name: userName,
+            propFirmName: firmName,
+            purchaseAmount,
+            cashbackAmount
           }
         } else if (emailData.type === 'status_change') {
           templateCategory = 'payments'
           // Extract data from the subject or text content
           if (emailData.subject.includes('Payment Sent')) {
-            templateType = 'paymentSent'
+            templateType = 'payoutProcessing'
             // Parse payment details from text content
             const text = emailData.text
-            const amountMatch = text.match(/\$(\d+\.?\d*)/)
-            const amount = amountMatch ? parseFloat(amountMatch[1]) : 0
+            const nameMatch = text.match(/Hi\s+([^,]+),/)
+            const amountMatch = text.match(/Amount Sent:\s*\$(\d+\.?\d*)/)
+            const walletMatch = text.match(/Wallet Address:\s*([^\n]+)/)
+            const txMatch = text.match(/Transaction Hash:\s*([^\n]+)/)
+            const userName = nameMatch ? nameMatch[1].trim() : emailData.to.split('@')[0]
+            const cashbackAmount = amountMatch ? parseFloat(amountMatch[1]) : 0
+            const walletAddress = walletMatch ? walletMatch[1].trim() : 'User Wallet'
+            const transactionHash = txMatch ? txMatch[1].trim() : 'Transaction Hash'
             templateData = {
-              userName: emailData.to.split('@')[0],
-              amount: amount,
-              firmName: 'Cashback',
-              walletAddress: 'User Wallet',
-              transactionHash: 'Transaction Hash'
+              name: userName,
+              cashbackAmount,
+              purchaseAmount: cashbackAmount,
+              propFirmName: 'Cashback',
+              walletAddress,
+              transactionHash
             }
           } else {
+            // Default to a generic status-change style via payments category if needed
             templateType = 'cashbackRequest'
             templateData = {
-              userName: emailData.to.split('@')[0],
-              firmName: 'Prop Firm',
-              amount: 0
+              name: emailData.to.split('@')[0],
+              propFirmName: 'Prop Firm',
+              purchaseAmount: 0,
+              cashbackAmount: 0
             }
           }
         }
