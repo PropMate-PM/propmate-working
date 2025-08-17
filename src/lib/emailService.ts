@@ -15,7 +15,7 @@ export interface EmailData {
   subject: string
   html: string
   text: string
-  type: 'welcome' | 'status_change' | 'manual' | 'broadcast' | 'paymentSent' | 'statusChange'
+  type: 'welcome' | 'status_change' | 'manual' | 'broadcast' | 'paymentSent' | 'statusChange' | 'cashbackRequest'
   userId?: string
 }
 
@@ -272,7 +272,7 @@ const generateEmailTemplate = (
 export class EmailService {
   private static instance: EmailService
   private emailHistory: EmailData[] = []
-  private emailApiUrl: string | undefined = import.meta.env.VITE_EMAIL_API_URL || `${location.origin}/functions/v1/send-email`
+  private emailApiUrl: string | undefined = import.meta.env.VITE_EMAIL_API_URL || '/.netlify/functions/send-email'
 
   static getInstance(): EmailService {
     if (!EmailService.instance) {
@@ -315,12 +315,11 @@ export class EmailService {
               transactionHash: 'Transaction Hash'
             }
           } else {
-            templateType = 'statusChange'
+            templateType = 'cashbackRequest'
             templateData = {
               userName: emailData.to.split('@')[0],
-              status: 'approved',
-              amount: 0,
-              firmName: 'Prop Firm'
+              firmName: 'Prop Firm',
+              amount: 0
             }
           }
         }
@@ -353,7 +352,7 @@ export class EmailService {
         emailData.userId || null,
         emailData.subject,
         emailData.text.substring(0, 500), // First 500 chars for summary
-        emailData.type === 'paymentSent' || emailData.type === 'statusChange' ? 'status_change' : emailData.type,
+        emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
         false
       )
       
@@ -364,7 +363,7 @@ export class EmailService {
         { 
           to: emailData.to, 
           subject: emailData.subject, 
-          type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' ? 'status_change' : emailData.type,
+          type: emailData.type === 'paymentSent' || emailData.type === 'statusChange' || emailData.type === 'cashbackRequest' ? 'status_change' : emailData.type,
           html_length: emailData.html.length,
           ip: getUserIP(),
           ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
