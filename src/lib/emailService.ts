@@ -36,24 +36,31 @@ const EMAIL_CONFIG = {
 // Email templates
 export const emailTemplates = {
   welcome: (userName: string): EmailTemplate => ({
-    subject: 'Welcome to PropMate!',
+    subject: 'Welcome to PropMate – Your Cashback Trading Partner',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #8B5A9F;">Welcome to PropMate, ${userName}!</h1>
-        <p>Thank you for joining our community of smart traders who save money on prop firm challenges.</p>
-        <h2>What's Next?</h2>
-        <ul>
-          <li>Browse our featured prop firms</li>
-          <li>Purchase challenges through our affiliate links</li>
-          <li>Submit your cashback requests</li>
-          <li>Get paid in crypto!</li>
-        </ul>
-        <p>If you have any questions, feel free to reach out to our support team.</p>
-        <p>Happy trading!</p>
-        <p>The PropMate Team</p>
+        <h1 style="color: #8B5A9F;">Welcome to PropMate – Your Cashback Trading Partner</h1>
+        <p>Hi ${userName},</p>
+        <p>Welcome to PropMate – the premier platform for prop firm cashback rewards.<br>
+        We're excited to have you onboard!</p>
+        
+        <h2>Here's how to get started in 3 quick steps:</h2>
+        <ol>
+          <li><strong>Browse Firms:</strong> Explore our curated list of leading prop trading firms.</li>
+          <li><strong>Use Our Links:</strong> Purchase through our referral links to qualify for cashback.</li>
+          <li><strong>Submit Proof:</strong> Upload your purchase receipt to claim your cashback.</li>
+        </ol>
+        
+        <p>💡 <strong>Tip:</strong> Always use our referral links to ensure your cashback is tracked correctly.</p>
+        
+        <p>We look forward to helping you maximize your trading benefits.<br>
+        Log in to your dashboard anytime to explore firms and manage requests.</p>
+        
+        <p>Happy trading,<br>
+        The PropMate Team</p>
       </div>
     `,
-    text: `Welcome to PropMate, ${userName}! Thank you for joining our community of smart traders who save money on prop firm challenges. Browse our featured prop firms, purchase challenges through our affiliate links, submit your cashback requests, and get paid in crypto! If you have any questions, feel free to reach out to our support team. Happy trading! The PropMate Team`
+    text: `Hi ${userName}, Welcome to PropMate – the premier platform for prop firm cashback rewards. We're excited to have you onboard! Here's how to get started: 1) Browse Firms: Explore our curated list of leading prop trading firms. 2) Use Our Links: Purchase through our referral links to qualify for cashback. 3) Submit Proof: Upload your purchase receipt to claim your cashback. Tip: Always use our referral links to ensure your cashback is tracked correctly. We look forward to helping you maximize your trading benefits. Log in to your dashboard anytime to explore firms and manage requests. Happy trading, The PropMate Team`
   }),
 
   statusChange: (userName: string, status: string, amount: number, firmName: string): EmailTemplate => ({
@@ -89,24 +96,31 @@ export const emailTemplates = {
   }),
 
   confirmation: (userName: string, firmName: string, amount: number): EmailTemplate => ({
-    subject: 'Cashback Request Received - PropMate',
+    subject: 'Cashback Request Received – PropMate',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #8B5A9F;">Cashback Request Received</h1>
+        <h1 style="color: #8B5A9F;">Cashback Request Received – PropMate</h1>
         <p>Hi ${userName},</p>
-        <p>We've received your cashback request for <strong>${firmName}</strong>.</p>
+        <p>We've received your cashback request for <strong>${firmName}</strong>.<br>
+        Our team is reviewing your submission and will update you shortly.</p>
+        
         <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="margin-top: 0;">Request Details</h2>
-          <p><strong>Prop Firm:</strong> ${firmName}</p>
-          <p><strong>Purchase Amount:</strong> $${amount.toFixed(2)}</p>
-          <p><strong>Status:</strong> Under Review</p>
+          <h2 style="margin-top: 0;">Request Details:</h2>
+          <ul>
+            <li><strong>Prop Firm:</strong> ${firmName}</li>
+            <li><strong>Purchase Amount:</strong> $${amount.toFixed(2)}</li>
+            <li><strong>Estimated Cashback:</strong> $${(amount * 0.125).toFixed(2)}</li>
+            <li><strong>Status:</strong> Under Review</li>
+          </ul>
         </div>
-        <p>We'll review your request and process it within 5-7 business days. You'll receive an email notification once the status changes.</p>
-        <p>Thank you for using PropMate!</p>
-        <p>The PropMate Team</p>
+        
+        <p>We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent.</p>
+        
+        <p>Thank you for choosing PropMate,<br>
+        The PropMate Team</p>
       </div>
     `,
-            text: `Hi ${userName}, We've received your cashback request for ${firmName}. Purchase Amount: $${amount.toFixed(2)}. Status: Under Review. We'll review your request and process it within 5-7 business days. You'll receive an email notification once the status changes. Thank you for using PropMate! The PropMate Team`
+    text: `Hi ${userName}, We've received your cashback request for ${firmName}. Our team is reviewing your submission and will update you shortly. Request Details: Prop Firm: ${firmName}, Purchase Amount: $${amount.toFixed(2)}, Estimated Cashback: $${(amount * 0.125).toFixed(2)}, Status: Under Review. We typically process requests within 5–7 business days. You'll be notified once your cashback has been confirmed and sent. Thank you for choosing PropMate, The PropMate Team`
   })
 }
 
@@ -412,35 +426,35 @@ export class EmailService {
   // New enhanced email methods with better templates
   async sendEnhancedWelcomeEmail(userEmail: string, userName: string, userId?: string): Promise<EmailSendResult> {
     const content = `
-      <h2>Welcome ${userName}! 🎉</h2>
-      <p>Thank you for joining PropMate, the premier platform for prop firm cashback rewards.</p>
+      <h2>Welcome to PropMate – Your Cashback Trading Partner</h2>
+      <p>Hi ${userName},</p>
+      <p>Welcome to PropMate – the premier platform for prop firm cashback rewards.<br>
+      We're excited to have you onboard!</p>
       
       <div class="highlight">
-        <h3>🚀 Get Started in 3 Easy Steps:</h3>
+        <h3>Here's how to get started in 3 quick steps:</h3>
         <ol>
-          <li><strong>Browse Prop Firms:</strong> Explore our curated list of top prop trading firms</li>
-          <li><strong>Use Our Links:</strong> Purchase through our referral links to qualify for cashback</li>
-          <li><strong>Submit Requests:</strong> Upload your proof of purchase and claim your cashback</li>
+          <li><strong>Browse Firms:</strong> Explore our curated list of leading prop trading firms.</li>
+          <li><strong>Use Our Links:</strong> Purchase through our referral links to qualify for cashback.</li>
+          <li><strong>Submit Proof:</strong> Upload your purchase receipt to claim your cashback.</li>
         </ol>
       </div>
       
-      <h3>💰 How It Works:</h3>
-      <p>We partner with prop firms to offer you the best discounts available, plus up to 50% cashback on our affiliate commissions. It's a win-win!</p>
+      <p>💡 <strong>Tip:</strong> Always use our referral links to ensure your cashback is tracked correctly.</p>
       
-      <div class="success">
-        <p><strong>Pro Tip:</strong> Always use our referral links to ensure your cashback is tracked properly.</p>
-      </div>
+      <p>We look forward to helping you maximize your trading benefits.<br>
+      Log in to your dashboard anytime to explore firms and manage requests.</p>
       
-      <p>Ready to start earning? Log in to your dashboard and explore our prop firm directory.</p>
-      <p>Happy trading!<br><strong>The PropMate Team</strong></p>
+      <p>Happy trading,<br>
+      The PropMate Team</p>
     `
     
-    const html = generateEmailTemplate('Welcome to PropMate', content, 'View Prop Firms', '#')
-    const text = `Welcome ${userName}! Thank you for joining PropMate. Get started: 1) Browse prop firms, 2) Use our links, 3) Submit requests. We offer up to 50% cashback on affiliate commissions. Always use our referral links for proper tracking. Happy trading! The PropMate Team`
+    const html = generateEmailTemplate('Welcome to PropMate', content, 'Access Dashboard', '#')
+    const text = `Hi ${userName}, Welcome to PropMate – the premier platform for prop firm cashback rewards. We're excited to have you onboard! Here's how to get started: 1) Browse Firms: Explore our curated list of leading prop trading firms. 2) Use Our Links: Purchase through our referral links to qualify for cashback. 3) Submit Proof: Upload your purchase receipt to claim your cashback. Tip: Always use our referral links to ensure your cashback is tracked correctly. We look forward to helping you maximize your trading benefits. Log in to your dashboard anytime to explore firms and manage requests. Happy trading, The PropMate Team`
     
     return this.sendEmail({
       to: userEmail,
-      subject: 'Welcome to PropMate - Start Earning Cashback Today!',
+      subject: 'Welcome to PropMate – Your Cashback Trading Partner',
       html,
       text,
       type: 'welcome',
@@ -510,35 +524,37 @@ export class EmailService {
     userId?: string
   ): Promise<EmailSendResult> {
     const content = `
-      <h2>🚀 Payment Sent Successfully!</h2>
-      <p>Your cashback payment has been sent to your wallet. Here are the transaction details:</p>
+      <h2>Cashback Payment Sent – $${paymentDetails.amount.toFixed(2)}</h2>
+      <p>Hi ${paymentDetails.userName},</p>
+      <p>Your cashback payment has been successfully processed and sent to your wallet.</p>
       
       <div class="success">
-        <h3>💰 Payment Details:</h3>
+        <h3>Payment Details:</h3>
         <ul>
-          <li><strong>Amount:</strong> $${paymentDetails.amount.toFixed(2)}</li>
+          <li><strong>Amount Sent:</strong> $${paymentDetails.amount.toFixed(2)}</li>
           <li><strong>Prop Firm:</strong> ${paymentDetails.firmName}</li>
           <li><strong>Wallet Address:</strong> ${paymentDetails.walletAddress}</li>
           <li><strong>Transaction Hash:</strong> <code style="word-break: break-all; background: #f8f9fa; padding: 2px 4px; border-radius: 3px;">${paymentDetails.transactionHash}</code></li>
         </ul>
       </div>
       
-      <h3>🔍 Verify Your Transaction:</h3>
-      <p>You can verify this transaction on the blockchain using the transaction hash above. Depending on network congestion, it may take a few minutes to appear in your wallet.</p>
+      <p>🔎 <strong>Verify Transaction:</strong><br>
+      You can verify this transaction on the blockchain using the transaction hash above. Depending on network congestion, it may take a few minutes to appear.</p>
       
-      <div class="highlight">
-        <p><strong>Keep This Email:</strong> Save this email as proof of payment for your records.</p>
-      </div>
+      <p>📌 <strong>Keep this email as proof of payment for your records.</strong></p>
       
-      <p>Thank you for using PropMate! We hope to process more cashback rewards for you soon.</p>
+      <p>Thank you for using PropMate. We look forward to sending you more cashback rewards soon.</p>
+      
+      <p>Best regards,<br>
+      The PropMate Team</p>
     `
     
-    const html = generateEmailTemplate('Payment Sent', content, 'View Dashboard', '#')
-    const text = `Payment sent! $${paymentDetails.amount.toFixed(2)} from ${paymentDetails.firmName} sent to ${paymentDetails.walletAddress}. Transaction: ${paymentDetails.transactionHash}`
+    const html = generateEmailTemplate('Cashback Payment Sent', content, 'View Payment History', '#')
+    const text = `Hi ${paymentDetails.userName}, Your cashback payment has been successfully processed and sent to your wallet. Amount Sent: $${paymentDetails.amount.toFixed(2)}, Prop Firm: ${paymentDetails.firmName}, Wallet Address: ${paymentDetails.walletAddress}, Transaction Hash: ${paymentDetails.transactionHash}. Verify Transaction: You can verify this transaction on the blockchain using the transaction hash above. Keep this email as proof of payment for your records. Thank you for using PropMate. We look forward to sending you more cashback rewards soon. Best regards, The PropMate Team`
     
     return this.sendEmail({
       to: userEmail,
-      subject: `Payment Sent - $${paymentDetails.amount.toFixed(2)} Cashback`,
+      subject: `Cashback Payment Sent – $${paymentDetails.amount.toFixed(2)}`,
       html,
       text,
       type: 'status_change',
