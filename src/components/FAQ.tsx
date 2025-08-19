@@ -5,7 +5,7 @@ import { useTheme } from '../contexts/ThemeContext'
 const faqs = [
   {
     question: "How does the cashback system work?",
-    answer: "After purchasing a prop firm challenge using our affiliate links, submit proof of purchase and your crypto wallet address via our Discord server or by emailing support@proptrading.com. Once verified, we'll send your cashback based on the processing time of the specific prop firm."
+    answer: "After purchasing a prop firm challenge using our affiliate links, submit proof of purchase and your crypto wallet address by emailing support@propmate.site. Once verified, we'll send your cashback based on the processing time of the specific prop firm."
   },
   {
     question: "Which cryptocurrencies do you support for payouts?",
@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     question: "How long does it take to receive my cashback?",
-    answer: "Purchase verification typically takes 1–2 business days. After that, the payout timeline depends on the specific prop firm. You'll receive a confirmation email once your cashback has been sent."
+    answer: "Purchase verification typically takes 1–2 business days. After that, payout can take up to 1-4 weeks. You'll receive a confirmation email once your cashback has been sent."
   },
   {
     question: "Can I get cashback on any prop firm purchase?",
@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     question: "What proof of purchase is required?",
-    answer: "Accepted proof includes a screenshot of your confirmation email, receipt, or account dashboard showing the transaction. Submit your proof via our Discord server or email us at support@proptrading.com."
+    answer: "Accepted proof includes a screenshot of your confirmation email, receipt, or account dashboard showing the transaction. Submit your proof by emailing us at support@propmate.site."
   },
   {
     question: "Is there a minimum purchase amount to qualify for cashback?",

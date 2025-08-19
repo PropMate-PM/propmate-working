@@ -344,14 +344,14 @@ export class EmailService {
         </ul>
       
           <h3>Payment Process:</h3>
-      <p>Your cashback will be processed within 1-2 business days. You'll receive another email with the transaction hash once the payment is sent.</p>
+      <p>Your cashback will be processed within 1-2 business days for verification. After verification, payout can take up to 1-4 weeks. You'll receive another email with the transaction hash once the payment is sent.</p>
       
         <p><strong>Payment Method:</strong> Cryptocurrency transfer to your provided wallet address</p>
       
       <p>Thank you for choosing PropMate for your cashback needs!</p>
         </div>
       `,
-      text: `Cashback approved! ${requestDetails.firmName} - $${requestDetails.cashbackAmount.toFixed(2)} will be sent to your wallet within 1-2 business days.`,
+      text: `Cashback approved! ${requestDetails.firmName} - $${requestDetails.cashbackAmount.toFixed(2)} will be sent to your wallet within 1-2 business days for verification. After verification, payout can take up to 1-4 weeks.`,
       type: 'status_change',
       userId
     })

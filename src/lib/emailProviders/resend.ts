@@ -123,7 +123,7 @@ export class ResendEmailProvider {
 export function createResendProvider(): ResendEmailProvider {
   const config: ResendConfig = {
     apiKey: process.env.RESEND_API_KEY || '',
-    fromEmail: process.env.FROM_EMAIL || 'noreply@propmate.com',
+          fromEmail: process.env.FROM_EMAIL || 'noreply@propmate.site',
     fromName: process.env.FROM_NAME || 'PropMate'
   };
 

@@ -25,3 +25,5 @@ WHERE exclusive_discount_percent IS NOT NULL
 OR exclusive_coupon_code IS NOT NULL;
 
 
+
+

@@ -36,9 +36,9 @@ RESEND_API_KEY=re_your-resend-api-key-here
 # SENDGRID_API_KEY=SG.your-sendgrid-api-key-here
 
 # Email Configuration
-FROM_EMAIL=noreply@propmate.com
+FROM_EMAIL=noreply@propmate.site
 FROM_NAME=PropMate
-SUPPORT_EMAIL=support@propmate.com
+SUPPORT_EMAIL=support@propmate.site
 ```
 
 ## Step 2: Apply Security Migration

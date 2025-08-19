@@ -220,7 +220,7 @@ export class SendGridEmailProvider {
 export function createSendGridProvider(): SendGridEmailProvider {
   const config: SendGridConfig = {
     apiKey: process.env.SENDGRID_API_KEY || '',
-    fromEmail: process.env.FROM_EMAIL || 'noreply@propmate.com',
+          fromEmail: process.env.FROM_EMAIL || 'noreply@propmate.site',
     fromName: process.env.FROM_NAME || 'PropMate'
   };
 
